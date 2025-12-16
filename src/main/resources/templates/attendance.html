@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Attendance Logs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">AttSys</a>
+            <div class="navbar-nav">
+                <a class="nav-link" th:href="@{/devices}">Devices</a>
+                <a class="nav-link active" th:href="@{/attendance}">Attendance Logs</a>
+                <a class="nav-link" th:href="@{/employees}">Employees</a>
+                <a class="nav-link" th:href="@{/departments}">Departments</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Attendance Logs</h2>
+            <form action="/attendance" method="get" class="d-flex">
+                <select name="departmentId" class="form-select me-2">
+                    <option value="">All Departments</option>
+                    <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
+                        th:selected="${selectedDeptId == dept.id}">
+                    </option>
+                </select>
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ID</th>
+                            <th>Employee Name</th>
+                            <th>Employee ID</th>
+                            <th>Device ID</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${logs}">
+                            <td th:text="${log.id}">1</td>
+                            <td th:text="${employeeMap.getOrDefault(log.employeeId, 'Unknown')}">John Doe</td>
+                            <td th:text="${log.employeeId}">101</td>
+                            <td th:text="${log.deviceId}">1</td>
+                            <td th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}">2023-10-01 08:30:00
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(logs)}">
+                            <td colspan="4" class="text-center">No logs found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

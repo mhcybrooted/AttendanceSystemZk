@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Device Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">AttSys</a>
+            <div class="navbar-nav">
+                <a class="nav-link" th:href="@{/devices}">Devices</a>
+                <a class="nav-link" th:href="@{/attendance}">Attendance Logs</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-3">Connected Devices</h2>
+
+        <form th:action="@{/sync}" method="post" class="mb-4">
+            <button type="submit" class="btn btn-warning">Sync All Devices Now</button>
+        </form>
+
+        <div class="card mb-4">
+            <div class="card-header">Device List</div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>IP Address</th>
+                            <th>Port</th>
+                            <th>Serial Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="device : ${devices}">
+                            <td th:text="${device.id}">1</td>
+                            <td th:text="${device.name}">Main Entrance</td>
+                            <td th:text="${device.ipAddress}">10.10.15.3</td>
+                            <td th:text="${device.port}">4370</td>
+                            <td th:text="${device.serialNumber}">SN12345</td>
+                            <td>
+                                <span th:if="${device.id != null}" class="badge bg-success">Online</span>
+                                <span th:if="${device.id == null}" class="badge bg-secondary">Offline</span>
+                            </td>
+                            <td>
+                                <form action="/devices/download" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-primary btn-sm">Download Logs</button>
+                                </form>
+                                <form action="/devices/download-users" method="post"
+                                    style="display:inline; margin-left:5px;">
+                                    <button type="submit" class="btn btn-info btn-sm text-white">Download Users</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(devices)}">
+                            <td colspan="7" class="text-center">No devices configured.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Add New Device</div>
+            <div class="card-body">
+                <form th:action="@{/devices}" th:object="${newDevice}" method="post">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" th:field="*{name}" placeholder="Device Name"
+                                required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" th:field="*{ipAddress}"
+                                placeholder="IP Address (e.g., 10.10.15.3)" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" th:field="*{port}" placeholder="Port (4370)"
+                                required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" th:field="*{serialNumber}"
+                                placeholder="Serial Number (Optional)">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-success w-100">Add</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
