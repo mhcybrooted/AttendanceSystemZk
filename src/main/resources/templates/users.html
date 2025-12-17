@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>User Management</title>
+</head>
+
+<body>
+    <div th:replace="~{layout :: layout(~{::section}, ~{::script}, 'users')}">
+        <section>
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-users-cog me-2"></i>User Management</h2>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-plus me-2"></i>Add User
+                    </button>
+                </div>
+
+                <!-- Alerts -->
+                <div th:if="${param.error == 'exists'}" class="alert alert-danger alert-dismissible fade show">
+                    Username already exists!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${param.success == 'added'}" class="alert alert-success alert-dismissible fade show">
+                    User added successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${param.success == 'deleted'}" class="alert alert-success alert-dismissible fade show">
+                    User deleted successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Users Table -->
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">ID</th>
+                                        <th>Username</th>
+                                        <th>Role</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="user : ${users}">
+                                        <td class="ps-4" th:text="${user.id}">1</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-light text-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                                    style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <span class="fw-bold" th:text="${user.username}">admin</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge"
+                                                th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : 'bg-info'}"
+                                                th:text="${user.role}">ADMIN</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <a th:if="${#authentication.name != user.username}"
+                                                th:href="@{/users/delete/{id}(id=${user.id})}"
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Are you sure you want to delete this user?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            <span th:if="${#authentication.name == user.username}"
+                                                class="text-muted small fst-italic">
+                                                (It's you)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add User Modal -->
+            <div class="modal fade" id="addUserModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create New User</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="/users/add" method="post">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" name="username" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Role</label>
+                                    <select name="role" class="form-select">
+                                        <option value="HR">HR (Read Only)</option>
+                                        <option value="ADMIN">ADMIN (Full Access)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Create User</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            // Page specific scripts if necessary
+        </script>
+    </div>
+</body>
+
+</html>
