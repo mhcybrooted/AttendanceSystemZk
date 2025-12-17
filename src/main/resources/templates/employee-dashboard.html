@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>My Dashboard</title>
+</head>
+
+<body>
+    <div th:replace="~{layout :: layout(~{::section}, ~{::script}, 'dashboard')}">
+        <section>
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card bg-primary text-white shadow-sm">
+                        <div class="card-body d-flex align-items-center justify-content-between p-4">
+                            <div>
+                                <h2 class="mb-1" th:text="${'Hello, ' + employee.name}">Hello, Employee</h2>
+                                <p class="mb-0 opacity-75"
+                                    th:text="${'ID: ' + employee.id + ' | Dept: ' + (employee.department != null ? employee.department.name : 'N/A')}">
+                                    ID: 101</p>
+                            </div>
+                            <i class="fas fa-id-card fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white fw-bold">
+                            <i class="fas fa-history me-2 text-info"></i> Recent Activity
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-center"
+                                    th:each="log : ${recentLogs}">
+                                    <div>
+                                        <h6 class="mb-0"
+                                            th:text="${#temporals.format(log.timestamp, 'EEEE, dd MMM yyyy')}">Monday
+                                        </h6>
+                                    </div>
+                                    <span class="badge bg-light text-dark border"
+                                        th:text="${#temporals.format(log.timestamp, 'HH:mm:ss')}">09:00</span>
+                                </div>
+                                <div class="list-group-item text-center text-muted py-4"
+                                    th:if="${recentLogs.isEmpty()}">
+                                    No recent logs found.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white fw-bold">
+                            <i class="fas fa-download me-2 text-success"></i> My Reports
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted">Download your personal attendance records.</p>
+                            <!-- Placeholder links - functionality exists in Controllers but need to map to 'current user' logic later if needed -->
+                            <button class="btn btn-outline-secondary w-100 mb-2" disabled>
+                                <i class="fas fa-file-pdf me-2"></i> Monthly Report (Coming Soon)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            // Scripts
+        </script>
+    </div>
+</body>
+
+</html>

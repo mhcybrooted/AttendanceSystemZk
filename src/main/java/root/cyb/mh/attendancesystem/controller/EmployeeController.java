@@ -6,7 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import root.cyb.mh.attendancesystem.model.Employee;
 import root.cyb.mh.attendancesystem.repository.EmployeeRepository;
-import root.cyb.mh.attendancesystem.repository.DepartmentRepository; // Added import
+import root.cyb.mh.attendancesystem.repository.DepartmentRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Controller
 @RequestMapping("/employees")
@@ -16,7 +17,10 @@ public class EmployeeController {
     private EmployeeRepository employeeRepository;
 
     @Autowired
-    private DepartmentRepository departmentRepository; // Injected DepartmentRepository
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping
     public String listEmployees(Model model) {
@@ -30,6 +34,10 @@ public class EmployeeController {
     public String saveEmployee(@ModelAttribute Employee employee, @RequestParam(required = false) Long departmentId) {
         if (departmentId != null) {
             departmentRepository.findById(departmentId).ifPresent(employee::setDepartment);
+        }
+        // Hash the username (which acts as password)
+        if (employee.getUsername() != null && !employee.getUsername().isEmpty()) {
+            employee.setUsername(passwordEncoder.encode(employee.getUsername()));
         }
         employeeRepository.save(employee);
         return "redirect:/employees";

@@ -23,6 +23,11 @@ public class Employee {
     private Department department;
 
     private String email;
+
+    // This field acts as the "Password" for Employee Login
+    private String username;
+
+    // Legacy password field, can be ignored or removed later
     private String password;
     @jakarta.persistence.Column(length = 100000) // Large text for Base64 image
     private String photoBase64;

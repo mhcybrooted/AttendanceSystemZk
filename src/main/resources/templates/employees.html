@@ -111,6 +111,11 @@
                                         <input type="email" class="form-control" id="empEmail" name="email"
                                             placeholder="john@example.com">
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Login Password (Username)</label>
+                                        <input type="text" class="form-control" id="empUsername" name="username"
+                                            placeholder="Set password for employee login">
+                                    </div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary"
@@ -151,7 +156,16 @@
                 document.getElementById('empRole').value = '';
                 document.getElementById('empEmail').value = '';
                 document.getElementById('empDept').value = '';
+                document.getElementById('empUsername').value = ''; // Clear username
             });
+            document.getElementById('empModalTitle').innerText = 'Add Employee';
+            document.getElementById('empId').readOnly = false;
+            document.getElementById('empId').value = '';
+            document.getElementById('empName').value = '';
+            document.getElementById('empRole').value = '';
+            document.getElementById('empEmail').value = '';
+            document.getElementById('empDept').value = '';
+
         </script>
     </div>
 </body>

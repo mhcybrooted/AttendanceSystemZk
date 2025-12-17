@@ -11,4 +11,6 @@ public interface AttendanceLogRepository extends JpaRepository<AttendanceLog, Lo
     boolean existsByEmployeeIdAndTimestampAndDeviceId(String employeeId, LocalDateTime timestamp, Long deviceId);
 
     java.util.List<AttendanceLog> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
+
+    java.util.List<AttendanceLog> findByEmployeeId(String employeeId);
 }
