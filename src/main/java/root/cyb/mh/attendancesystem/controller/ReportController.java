@@ -311,14 +311,39 @@ public class ReportController {
         public String employeeMonthlyReport(@org.springframework.web.bind.annotation.PathVariable String employeeId,
                         @RequestParam(required = false) Integer year,
                         @RequestParam(required = false) Integer month,
+                        @RequestParam(required = false) String period,
                         Model model) {
-                if (year == null || month == null) {
-                        LocalDate now = LocalDate.now();
-                        year = now.getYear();
-                        month = now.getMonthValue();
+
+                LocalDate now = LocalDate.now();
+
+                if (period != null && !period.isEmpty()) {
+                        LocalDate startDate;
+                        LocalDate endDate = now;
+
+                        if ("3M".equals(period)) {
+                                startDate = now.minusMonths(2).withDayOfMonth(1);
+                        } else if ("6M".equals(period)) {
+                                startDate = now.minusMonths(5).withDayOfMonth(1);
+                        } else if ("1Y".equals(period)) {
+                                startDate = now.minusMonths(11).withDayOfMonth(1);
+                        } else {
+                                // Fallback or Specific Month handled below if period logic gets complex
+                                startDate = now.withDayOfMonth(1);
+                        }
+
+                        model.addAttribute("rangeReport",
+                                        reportService.getEmployeeRangeReport(employeeId, startDate, endDate));
+                        model.addAttribute("selectedPeriod", period);
+                } else {
+                        if (year == null || month == null) {
+                                year = now.getYear();
+                                month = now.getMonthValue();
+                        }
+                        model.addAttribute("report", reportService.getEmployeeMonthlyReport(employeeId, year, month));
+                        model.addAttribute("selectedYear", year);
+                        model.addAttribute("selectedMonth", month);
                 }
 
-                model.addAttribute("report", reportService.getEmployeeMonthlyReport(employeeId, year, month));
                 return "reports-employee-monthly";
         }
 
@@ -415,23 +440,47 @@ public class ReportController {
         public org.springframework.http.ResponseEntity<byte[]> downloadEmployeeMonthlyReportPdf(
                         @org.springframework.web.bind.annotation.PathVariable String employeeId,
                         @RequestParam(required = false) Integer year,
-                        @RequestParam(required = false) Integer month)
+                        @RequestParam(required = false) Integer month,
+                        @RequestParam(required = false) String period)
                         throws java.io.IOException, com.lowagie.text.DocumentException {
-                if (year == null || month == null) {
-                        LocalDate now = LocalDate.now();
-                        year = now.getYear();
-                        month = now.getMonthValue();
+
+                byte[] pdfBytes;
+                String filename;
+                LocalDate now = LocalDate.now();
+
+                if (period != null && !period.isEmpty()) {
+                        LocalDate startDate;
+                        LocalDate endDate = now;
+                        if ("3M".equals(period)) {
+                                startDate = now.minusMonths(2).withDayOfMonth(1);
+                        } else if ("6M".equals(period)) {
+                                startDate = now.minusMonths(5).withDayOfMonth(1);
+                        } else if ("1Y".equals(period)) {
+                                startDate = now.minusMonths(11).withDayOfMonth(1);
+                        } else {
+                                startDate = now.withDayOfMonth(1);
+                        }
+
+                        root.cyb.mh.attendancesystem.dto.EmployeeRangeReportDto rangeReport = reportService
+                                        .getEmployeeRangeReport(employeeId, startDate, endDate);
+                        pdfBytes = pdfExportService.exportEmployeeRangeReport(rangeReport);
+                        filename = "employee_report_" + employeeId + "_" + period + "_" + System.currentTimeMillis()
+                                        + ".pdf";
+                } else {
+                        if (year == null || month == null) {
+                                year = now.getYear();
+                                month = now.getMonthValue();
+                        }
+                        root.cyb.mh.attendancesystem.dto.EmployeeMonthlyDetailDto report = reportService
+                                        .getEmployeeMonthlyReport(employeeId, year, month);
+                        pdfBytes = pdfExportService.exportEmployeeMonthlyReport(report);
+                        filename = "employee_report_" + employeeId + "_" + month + "_" + year + "_"
+                                        + System.currentTimeMillis() + ".pdf";
                 }
-
-                root.cyb.mh.attendancesystem.dto.EmployeeMonthlyDetailDto report = reportService
-                                .getEmployeeMonthlyReport(employeeId, year, month);
-
-                byte[] pdfBytes = pdfExportService.exportEmployeeMonthlyReport(report);
 
                 return org.springframework.http.ResponseEntity.ok()
                                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                                                "attachment; filename=employee_report_" + employeeId + "_" + month + "_"
-                                                                + year + "_" + System.currentTimeMillis() + ".pdf")
+                                                "attachment; filename=" + filename)
                                 .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
                                 .body(pdfBytes);
         }
