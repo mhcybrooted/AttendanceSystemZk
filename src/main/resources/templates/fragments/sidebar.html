@@ -45,6 +45,25 @@
                     th:classappend="${activeLink == 'dashboard'} ? 'active'">
                     <i class="fas fa-id-card me-2"></i> My Dashboard
                 </a>
+                <a href="/employee/attendance/history" class="list-group-item list-group-item-action"
+                    th:classappend="${activeLink == 'history'} ? 'active'">
+                    <i class="fas fa-history me-2"></i> My History
+                </a>
+                <a href="/leave/employee" class="list-group-item list-group-item-action"
+                    th:classappend="${activeLink == 'leave'} ? 'active'">
+                    <i class="fas fa-calendar-check me-2"></i> My Leave
+                </a>
+            </div>
+
+
+
+            <!-- Management Section (Admin & HR) -->
+            <div sec:authorize="hasAnyRole('ADMIN', 'HR')">
+                <div class="sidebar-heading border-bottom bg-dark text-muted small py-2">MANAGEMENT</div>
+                <a href="/leave/manage" class="list-group-item list-group-item-action"
+                    th:classappend="${activeLink == 'leave-manage'} ? 'active'">
+                    <i class="fas fa-envelope-open-text me-2"></i> Leave Requests
+                </a>
             </div>
 
             <div sec:authorize="hasRole('ADMIN')">

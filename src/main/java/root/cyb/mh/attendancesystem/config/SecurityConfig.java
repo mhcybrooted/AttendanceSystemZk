@@ -34,6 +34,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
                                                 // Dashboard restricted to Admin/HR
                                                 .requestMatchers("/dashboard").hasAnyRole("ADMIN", "HR")
+                                                // Leave Management
+                                                .requestMatchers("/leave/manage/**").hasAnyRole("ADMIN", "HR")
                                                 // All other requests require authentication
                                                 .anyRequest().authenticated())
                                 .formLogin(form -> form

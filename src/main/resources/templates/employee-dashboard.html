@@ -24,43 +24,118 @@
                 </div>
             </div>
 
+            <!-- Stats Row -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-start border-4 border-success">
+                        <div class="card-body">
+                            <h6 class="text-uppercase text-muted small">Present This Month</h6>
+                            <h2 class="mb-0" th:text="${daysPresent}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-start border-4 border-warning">
+                        <div class="card-body">
+                            <h6 class="text-uppercase text-muted small">Late Arrivals</h6>
+                            <h2 class="mb-0 text-warning" th:text="${lateCount}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-start border-4 border-danger">
+                        <div class="card-body">
+                            <h6 class="text-uppercase text-muted small">Early Departures</h6>
+                            <h2 class="mb-0 text-danger" th:text="${earlyCount}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <!-- Shift Info Card -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm bg-light">
+                        <div class="card-body">
+                            <h6 class="text-uppercase text-muted small">My Shift</h6>
+                            <div th:if="${workSchedule != null}">
+                                <p class="mb-0 fw-bold"
+                                    th:text="${workSchedule.startTime + ' - ' + workSchedule.endTime}">09:00 - 18:00</p>
+                                <small class="text-muted"
+                                    th:text="${'Grace: ' + workSchedule.lateToleranceMinutes + ' min'}">Grace: 15
+                                    min</small>
+                            </div>
+                            <div th:if="${workSchedule == null}">
+                                <p class="mb-0 text-muted">Fixed (Standard)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Row -->
             <div class="row">
+                <!-- Recent Activity Table -->
                 <div class="col-md-8">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-white fw-bold">
-                            <i class="fas fa-history me-2 text-info"></i> Recent Activity
+                        <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-history me-2 text-info"></i> Recent Activity</span>
+                            <small class="text-muted">Last 10 punches</small>
                         </div>
                         <div class="card-body p-0">
-                            <div class="list-group list-group-flush">
-                                <div class="list-group-item d-flex justify-content-between align-items-center"
-                                    th:each="log : ${recentLogs}">
-                                    <div>
-                                        <h6 class="mb-0"
-                                            th:text="${#temporals.format(log.timestamp, 'EEEE, dd MMM yyyy')}">Monday
-                                        </h6>
-                                    </div>
-                                    <span class="badge bg-light text-dark border"
-                                        th:text="${#temporals.format(log.timestamp, 'HH:mm:ss')}">09:00</span>
-                                </div>
-                                <div class="list-group-item text-center text-muted py-4"
-                                    th:if="${recentLogs.isEmpty()}">
-                                    No recent logs found.
-                                </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Device</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="log : ${recentLogs}">
+                                            <td th:text="${#temporals.format(log.timestamp, 'dd MMM yyyy')}">01 Jan</td>
+                                            <td class="fw-bold"
+                                                th:text="${#temporals.format(log.timestamp, 'HH:mm:ss')}">09:00:00</td>
+                                            <td th:text="${log.deviceId}">1</td>
+                                            <td>
+                                                <!-- Simple logic for status tag based on time -->
+                                                <span class="badge bg-success">Recorded</span>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${recentLogs.isEmpty()}">
+                                            <td colspan="4" class="text-center text-muted py-3">No recent logs found.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Actions & Profile -->
                 <div class="col-md-4">
-                    <div class="card shadow-sm h-100">
+                    <div class="card shadow-sm mb-3">
                         <div class="card-header bg-white fw-bold">
-                            <i class="fas fa-download me-2 text-success"></i> My Reports
+                            <i class="fas fa-user-circle me-2 text-primary"></i> My Profile
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 th:text="${employee.name}">John Doe</h5>
+                            <p class="text-muted mb-2" th:text="${employee.role}">Staff</p>
+                            <span class="badge bg-secondary"
+                                th:text="${employee.department != null ? employee.department.name : 'Unassigned'}">IT</span>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white fw-bold">
+                            <i class="fas fa-tools me-2 text-dark"></i> Actions
                         </div>
                         <div class="card-body">
-                            <p class="small text-muted">Download your personal attendance records.</p>
-                            <!-- Placeholder links - functionality exists in Controllers but need to map to 'current user' logic later if needed -->
-                            <button class="btn btn-outline-secondary w-100 mb-2" disabled>
-                                <i class="fas fa-file-pdf me-2"></i> Monthly Report (Coming Soon)
+                            <a href="/employee/report/monthly/download" class="btn btn-primary w-100 mb-2">
+                                <i class="fas fa-file-pdf me-2"></i> Download Monthly Report
+                            </a>
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                <i class="fas fa-envelope me-2"></i> Request Leave (Coming Soon)
                             </button>
                         </div>
                     </div>

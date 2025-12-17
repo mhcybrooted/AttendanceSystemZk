@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>My Attendance History</title>
+</head>
+
+<body>
+    <div th:replace="~{layout :: layout(~{::section}, ~{::script}, 'history')}">
+        <section>
+            <div
+                class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">My Attendance History</h1>
+
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/employee/dashboard" class="btn btn-sm btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                    <!-- Month Filter Form -->
+                    <form method="get" action="/employee/attendance/history"
+                        class="row row-cols-lg-auto g-2 align-items-center">
+                        <div class="col-12">
+                            <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}"
+                                    th:text="${T(java.time.Month).of(i)}" th:selected="${i == selectedMonth}"></option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <input type="number" name="year" class="form-control form-select-sm"
+                                th:value="${selectedYear}" placeholder="Year" style="width: 80px;"
+                                onchange="this.form.submit()">
+                        </div>
+                        <div class="col-12">
+                            <noscript>
+                                <button type="submit" class="btn btn-sm btn-primary">Go</button>
+                            </noscript>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Stats for Month -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-success text-white shadow-sm">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0 opacity-75">Present</h6>
+                                    <h2 class="mb-0" th:text="${data.totalPresent}">0</h2>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white shadow-sm">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0 opacity-75">Absent</h6>
+                                    <h2 class="mb-0" th:text="${data.totalAbsent}">0</h2>
+                                </div>
+                                <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark shadow-sm">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0 opacity-75">Late</h6>
+                                    <h2 class="mb-0" th:text="${data.totalLates}">0</h2>
+                                </div>
+                                <i class="fas fa-clock fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Early Leaves -->
+                <div class="col-md-3">
+                    <div class="card bg-info text-white shadow-sm">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0 opacity-75">Early Left</h6>
+                                    <h2 class="mb-0" th:text="${data.totalEarlyLeaves}">0</h2>
+                                </div>
+                                <i class="fas fa-sign-out-alt fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Table -->
+            <div class="card shadow-sm mb-5">
+                <div class="card-header bg-white fw-bold">
+                    <i class="fas fa-calendar-alt me-2 text-primary"></i> Daily Attendance Log
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>In Time</th>
+                                    <th>Out Time</th>
+                                    <th>Late By</th>
+                                    <th>Early By</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="day : ${data.dailyDetails}">
+                                    <td class="fw-bold" th:text="${day.date}">2024-01-01</td>
+                                    <td class="text-muted small" th:text="${day.dayOfWeek}">MONDAY</td>
+
+                                    <!-- In Time -->
+                                    <td th:text="${day.inTime != null ? day.inTime : '-'}">09:00</td>
+
+                                    <!-- Out Time -->
+                                    <td th:text="${day.outTime != null ? day.outTime : '-'}">18:00</td>
+
+                                    <!-- Late Duration -->
+                                    <td>
+                                        <div th:if="${day.lateDurationMinutes > 0}"
+                                            class="d-flex align-items-center text-danger">
+                                            <i class="fas fa-exclamation-triangle me-1 small"></i>
+                                            <span th:text="${day.lateDurationMinutes + ' min'}" class="fw-bold"></span>
+                                        </div>
+                                        <span th:unless="${day.lateDurationMinutes > 0}"
+                                            class="text-muted small">-</span>
+                                    </td>
+
+                                    <!-- Early Duration -->
+                                    <td>
+                                        <div th:if="${day.earlyLeaveDurationMinutes > 0}" class="text-info">
+                                            <span th:text="${day.earlyLeaveDurationMinutes + ' min'}"
+                                                class="fw-bold"></span>
+                                        </div>
+                                        <span th:unless="${day.earlyLeaveDurationMinutes > 0}"
+                                            class="text-muted small">-</span>
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill" th:classappend="'bg-' + ${day.statusColor}"
+                                            th:text="${day.status}">PRESENT</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${data.dailyDetails.isEmpty()}">
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                                        No attendance records found for this month.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            // Any specific JS for this page
+        </script>
+    </div>
+</body>
+
+</html>

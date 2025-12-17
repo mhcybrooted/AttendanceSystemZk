@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>My Leave Requests</title>
+</head>
+
+<body>
+    <div th:replace="~{layout :: layout(~{::section}, ~{::script}, 'leave')}">
+        <section>
+            <div
+                class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Leave Requests</h1>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" id="leaveTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="apply-tab" data-bs-toggle="tab" data-bs-target="#apply"
+                        type="button" role="tab">Apply for Leave</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history"
+                        type="button" role="tab">My Request History</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="leaveTabsContent">
+
+                <!-- Tab 1: Apply Form -->
+                <div class="tab-pane fade show active" id="apply" role="tabpanel">
+                    <div class="card shadow-sm col-md-8 mx-auto">
+                        <div class="card-body">
+                            <form action="/leave/employee/apply" method="post" th:object="${newRequest}">
+                                <div class="mb-3">
+                                    <label class="form-label">Leave Type</label>
+                                    <select class="form-select" field="*{leaveType}" name="leaveType" required>
+                                        <option value="Sick">Sick Leave</option>
+                                        <option value="Casual">Casual Leave</option>
+                                        <option value="Vacation">Vacation</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" field="*{startDate}" name="startDate"
+                                            required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" class="form-control" field="*{endDate}" name="endDate"
+                                            required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea class="form-control" field="*{reason}" name="reason" rows="3"
+                                        required></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: History Table -->
+                <div class="tab-pane fade" id="history" role="tabpanel">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-striped mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Dates</th>
+                                            <th>Reason</th>
+                                            <th>Status</th>
+                                            <th>Reviewer Comments</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="req : ${history}">
+                                            <td th:text="${req.leaveType}">Sick</td>
+                                            <td>
+                                                <span th:text="${req.startDate}"></span> to <span
+                                                    th:text="${req.endDate}"></span>
+                                            </td>
+                                            <td th:text="${req.reason}">Fever</td>
+                                            <td>
+                                                <span class="badge"
+                                                    th:classappend="${req.status.name() == 'APPROVED' ? 'bg-success' : (req.status.name() == 'REJECTED' ? 'bg-danger' : 'bg-warning text-dark')}"
+                                                    th:text="${req.status}">PENDING</span>
+                                            </td>
+                                            <td class="small text-muted">
+                                                <div th:if="${req.adminComment != null}">
+                                                    <strong th:text="${req.reviewedBy}">Admin</strong>:
+                                                    <span th:text="${req.adminComment}"></span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${history.isEmpty()}">
+                                            <td colspan="5" class="text-center text-muted">No leave requests found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            // Auto open history tab if hash is set (optional enhancement)
+        </script>
+    </div>
+</body>
+
+</html>
