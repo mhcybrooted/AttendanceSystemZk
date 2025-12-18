@@ -802,7 +802,7 @@ public class ReportService {
         return rangeDto;
     }
 
-    private WorkSchedule resolveSchedule(String employeeId, LocalDate date, WorkSchedule globalDefault) {
+    public WorkSchedule resolveSchedule(String employeeId, LocalDate date, WorkSchedule globalDefault) {
         root.cyb.mh.attendancesystem.model.Shift specificShift = shiftService.getShiftForDate(employeeId, date);
         if (specificShift == null) {
             return globalDefault;

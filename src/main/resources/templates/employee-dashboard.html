@@ -8,196 +8,202 @@
 <body>
     <div th:replace="~{layout :: layout(~{::section}, ~{::script}, 'dashboard')}">
         <section>
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <div class="card bg-primary text-white shadow-sm">
-                        <div class="card-body d-flex align-items-center justify-content-between p-4">
-                            <div>
-                                <h2 class="mb-1" th:text="${'Hello, ' + employee.name}">Hello, Employee</h2>
-                                <p class="mb-0 opacity-75"
-                                    th:text="${'ID: ' + employee.id + ' | Dept: ' + (employee.department != null ? employee.department.name : 'N/A')}">
-                                    ID: 101</p>
-                            </div>
-                            <i class="fas fa-id-card fa-3x opacity-50"></i>
+            <!-- 1. Hero Header -->
+            <div class="card bg-primary text-white shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1 fw-bold" th:text="${'Welcome back, ' + employee.name}">Welcome back, User
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                <i class="fas fa-id-badge me-1"></i> <span th:text="${employee.id}">ID</span> &bull;
+                                <i class="fas fa-building me-1 ms-2"></i> <span
+                                    th:text="${employee.department != null ? employee.department.name : 'Unassigned'}">Dept</span>
+                            </p>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Row -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card shadow-sm border-start border-4 border-success">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-muted small">Present This Month</h6>
-                            <h2 class="mb-0" th:text="${daysPresent}">0</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm border-start border-4 border-info">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-muted small">Leaves Taken</h6>
-                            <h2 class="mb-0 text-info" th:text="${leaveCount}">0</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm border-start border-4 border-warning">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-muted small">Late Arrivals</h6>
-                            <h2 class="mb-0 text-warning" th:text="${lateCount}">0</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm border-start border-4 border-danger">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-muted small">Early Departures</h6>
-                            <h2 class="mb-0 text-danger" th:text="${earlyCount}">0</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Annual Quota Row -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card shadow-sm bg-light">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-muted small">Annual Quota</h6>
-                            <h2 class="mb-0 text-primary" th:text="${annualQuota}">12</h2>
-                            <small class="text-muted">Days / Year</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm bg-light">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-muted small">Total Taken (Year)</h6>
-                            <h2 class="mb-0 text-dark" th:text="${yearlyLeavesTaken}">0</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm bg-white border-success border-top">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-success small">Paid Leaves</h6>
-                            <h2 class="mb-0 text-success" th:text="${paidLeavesTaken}">0</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm bg-white border-danger border-top">
-                        <div class="card-body">
-                            <h6 class="text-uppercase text-danger small">Unpaid Leaves</h6>
-                            <h2 class="mb-0 text-danger" th:text="${unpaidLeavesTaken}">0</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <!-- Shift Info Card (Moved here) -->
-                <div class="col-md-12">
-                    <div class="card shadow-sm bg-light">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-uppercase text-muted small mb-1">My Shift Schedule</h6>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <div class="bg-white text-dark p-3 rounded shadow-sm d-inline-block text-start"
+                                style="min-width: 200px;">
+                                <small class="text-uppercase text-muted fw-bold d-block mb-1"
+                                    style="font-size: 0.7rem;">Today's Shift</small>
                                 <div th:if="${workSchedule != null}">
-                                    <span class="fw-bold fs-5"
-                                        th:text="${workSchedule.startTime + ' - ' + workSchedule.endTime}">09:00 -
-                                        18:00</span>
-                                    <span class="text-muted ms-2"
-                                        th:text="${'(Grace: ' + workSchedule.lateToleranceMinutes + ' min)'}">Grace: 15
-                                        min</span>
+                                    <h4 class="mb-0 fw-bold text-primary"
+                                        th:text="${workSchedule.startTime + ' - ' + workSchedule.endTime}">09:00 - 18:00
+                                    </h4>
+                                    <small class="text-muted d-block mt-1">
+                                        Tolerance: <span th:text="${workSchedule.lateToleranceMinutes}">15</span>m
+                                    </small>
                                 </div>
                                 <div th:if="${workSchedule == null}">
-                                    <span class="mb-0 text-muted">Fixed (Standard)</span>
-                                </div>
-                            </div>
-                            <span class="badge bg-secondary">Weekends: Sat, Sun</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Content Row -->
-                <div class="row">
-                    <!-- Recent Activity Table -->
-                    <div class="col-md-8">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-history me-2 text-info"></i> Recent Activity</span>
-                                <small class="text-muted">Last 10 punches</small>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-striped mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Time</th>
-                                                <th>Device</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="log : ${recentLogs}">
-                                                <td th:text="${#temporals.format(log.timestamp, 'dd MMM yyyy')}">01 Jan
-                                                </td>
-                                                <td class="fw-bold"
-                                                    th:text="${#temporals.format(log.timestamp, 'HH:mm:ss')}">09:00:00
-                                                </td>
-                                                <td th:text="${log.deviceId}">1</td>
-                                                <td>
-                                                    <!-- Simple logic for status tag based on time -->
-                                                    <span class="badge bg-success">Recorded</span>
-                                                </td>
-                                            </tr>
-                                            <tr th:if="${recentLogs.isEmpty()}">
-                                                <td colspan="4" class="text-center text-muted py-3">No recent logs
-                                                    found.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <h5 class="mb-0">Standard Shift</h5>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Actions & Profile -->
-                    <div class="col-md-4">
-                        <div class="card shadow-sm mb-3">
-                            <div class="card-header bg-white fw-bold">
-                                <i class="fas fa-user-circle me-2 text-primary"></i> My Profile
+            <!-- 2. Monthly Stats Row -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3 text-success">
+                                <i class="fas fa-check-circle fa-2x"></i>
                             </div>
-                            <div class="card-body text-center">
-                                <h5 th:text="${employee.name}">John Doe</h5>
-                                <p class="text-muted mb-2" th:text="${employee.role}">Staff</p>
-                                <span class="badge bg-secondary"
-                                    th:text="${employee.department != null ? employee.department.name : 'Unassigned'}">IT</span>
-                            </div>
-                        </div>
-
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-white fw-bold">
-                                <i class="fas fa-tools me-2 text-dark"></i> Actions
-                            </div>
-                            <div class="card-body">
-                                <a href="/employee/attendance/history" class="btn btn-primary w-100 mb-2">
-                                    <i class="fas fa-history me-2"></i> View Attendance History
-                                </a>
-                                <a href="/employee/report/monthly/download" class="btn btn-outline-primary w-100 mb-2">
-                                    <i class="fas fa-file-pdf me-2"></i> Download Current Month Report
-                                </a>
-                                <button class="btn btn-outline-secondary w-100" disabled>
-                                    <i class="fas fa-envelope me-2"></i> Request Leave (Coming Soon)
-                                </button>
+                            <div>
+                                <h6 class="text-muted text-uppercase small mb-1">Present</h6>
+                                <h3 class="mb-0 fw-bold" th:text="${daysPresent}">0</h3>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3 text-warning">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted text-uppercase small mb-1">Late</h6>
+                                <h3 class="mb-0 fw-bold" th:text="${lateCount}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-3 text-danger">
+                                <i class="fas fa-sign-out-alt fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted text-uppercase small mb-1">Early Exit</h6>
+                                <h3 class="mb-0 fw-bold" th:text="${earlyCount}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3 text-info">
+                                <i class="fas fa-calendar-minus fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted text-uppercase small mb-1">Leaves</h6>
+                                <h3 class="mb-0 fw-bold" th:text="${leaveCount}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Main Content Split -->
+            <div class="row">
+                <!-- Left: Recent Activity -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div
+                            class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-history text-primary me-2"></i> Recent Activity
+                            </h5>
+                            <a href="/employee/attendance/history"
+                                class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light text-muted small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4">Date</th>
+                                            <th>Time</th>
+                                            <th>Device ID</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="border-top-0">
+                                        <tr th:each="log : ${recentLogs}">
+                                            <td class="ps-4 fw-bold text-dark"
+                                                th:text="${#temporals.format(log.timestamp, 'dd MMM yyyy')}">01 Jan</td>
+                                            <td class="font-monospace text-primary"
+                                                th:text="${#temporals.format(log.timestamp, 'HH:mm:ss')}">09:00:00</td>
+                                            <td><span class="badge bg-light text-dark border"
+                                                    th:text="${log.deviceId}">1</span></td>
+                                            <td><span
+                                                    class="badge bg-success bg-opacity-75 rounded-pill px-3">Recorded</span>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${recentLogs.isEmpty()}">
+                                            <td colspan="4" class="text-center text-muted py-5">
+                                                <i class="fas fa-clipboard mb-3 d-block fa-2x opacity-25"></i>
+                                                No recent attendance logs found.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Profile & Quota -->
+                <div class="col-lg-4 mb-4">
+                    <!-- Profile Card -->
+                    <div class="card shadow-sm mb-4 border-0">
+                        <div class="card-body text-center py-4">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm"
+                                style="width: 80px; height: 80px; font-size: 2rem;">
+                                <span th:text="${#strings.substring(employee.name,0,1)}">U</span>
+                            </div>
+                            <h5 class="fw-bold mb-1" th:text="${employee.name}">User Name</h5>
+                            <p class="text-muted small mb-0" th:text="${employee.role}">Role</p>
+                        </div>
+                    </div>
+
+                    <!-- Annual Leave Quota -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-umbrella-beach text-warning me-2"></i> Annual
+                                Leave Quota</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Used</span>
+                                <span class="fw-bold small">
+                                    <span th:text="${yearlyLeavesTaken}">5</span> / <span
+                                        th:text="${annualQuota}">12</span> Days
+                                </span>
+                            </div>
+                            <div class="progress mb-4" style="height: 10px;">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    th:style="'width: ' + ${(annualQuota > 0 ? (yearlyLeavesTaken * 100.0 / annualQuota) : 0)} + '%'"
+                                    th:aria-valuenow="${yearlyLeavesTaken}" aria-valuemin="0"
+                                    aria-valuemax="${annualQuota}"></div>
+                            </div>
+
+                            <div class="row text-center g-2">
+                                <div class="col-6">
+                                    <div class="p-2 border rounded bg-light">
+                                        <small class="d-block text-muted text-uppercase"
+                                            style="font-size: 0.65rem;">Paid Taken</small>
+                                        <h5 class="mb-0 fw-bold text-success" th:text="${paidLeavesTaken}">5</h5>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 border rounded bg-light">
+                                        <small class="d-block text-muted text-uppercase"
+                                            style="font-size: 0.65rem;">Unpaid Taken</small>
+                                        <h5 class="mb-0 fw-bold text-danger" th:text="${unpaidLeavesTaken}">0</h5>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <script>

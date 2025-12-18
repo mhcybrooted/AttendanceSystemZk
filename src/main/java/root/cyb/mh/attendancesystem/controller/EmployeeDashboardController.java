@@ -52,9 +52,10 @@ public class EmployeeDashboardController {
         // 1. Basic Employee Info
         model.addAttribute("employee", employee);
 
-        // 2. Shift / Schedule Info (Global for now, as per ReportService logic)
-        WorkSchedule schedule = workScheduleRepository.findAll().stream().findFirst().orElse(null);
-        model.addAttribute("workSchedule", schedule);
+        // 2. Shift / Schedule Info (Today's Effective Schedule)
+        WorkSchedule globalSchedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
+        WorkSchedule todaySchedule = reportService.resolveSchedule(employeeId, LocalDate.now(), globalSchedule);
+        model.addAttribute("workSchedule", todaySchedule);
 
         // 3. Recent Logs (Last 10)
         List<AttendanceLog> allLogs = attendanceLogRepository.findByEmployeeId(employeeId);
@@ -64,144 +65,47 @@ public class EmployeeDashboardController {
                 .collect(Collectors.toList());
         model.addAttribute("recentLogs", recentLogs);
 
-        // 4. Monthly Stats Calculation
-        calculateMonthlyStats(model, allLogs, schedule, employeeId);
+        // 4. Monthly Stats (Using ReportService for Dynamic Logic)
+        LocalDate now = LocalDate.now();
+        root.cyb.mh.attendancesystem.dto.EmployeeMonthlyDetailDto monthlyReport = reportService
+                .getEmployeeMonthlyReport(
+                        employeeId, now.getYear(), now.getMonthValue());
 
-        // 5. Annual Quota Stats
-        calculateAnnualStats(model, schedule, employeeId, employee);
+        if (monthlyReport != null) {
+            model.addAttribute("daysPresent", monthlyReport.getTotalPresent());
+            model.addAttribute("lateCount", monthlyReport.getTotalLates());
+            model.addAttribute("earlyCount", monthlyReport.getTotalEarlyLeaves());
+            model.addAttribute("leaveCount", monthlyReport.getTotalLeaves());
+        } else {
+            model.addAttribute("daysPresent", 0);
+            model.addAttribute("lateCount", 0);
+            model.addAttribute("earlyCount", 0);
+            model.addAttribute("leaveCount", 0);
+        }
 
-        return "employee-dashboard";
-    }
-
-    private void calculateAnnualStats(Model model, WorkSchedule schedule, String employeeId, Employee employee) {
-        int defaultQuota = schedule != null && schedule.getDefaultAnnualLeaveQuota() != null
-                ? schedule.getDefaultAnnualLeaveQuota()
+        // 5. Annual Quota Stats (Using Range Report for Year)
+        int defaultQuota = globalSchedule.getDefaultAnnualLeaveQuota() != null
+                ? globalSchedule.getDefaultAnnualLeaveQuota()
                 : 12;
         int quota = employee.getEffectiveQuota(defaultQuota);
 
-        // Calculate Total Approved Leaves for Current Year
-        int currentYear = LocalDate.now().getYear();
-        List<root.cyb.mh.attendancesystem.model.LeaveRequest> leaves = leaveRequestRepository
-                .findByStatusOrderByCreatedAtDesc(root.cyb.mh.attendancesystem.model.LeaveRequest.Status.APPROVED);
+        LocalDate startOfYear = LocalDate.of(now.getYear(), 1, 1);
+        LocalDate endOfYear = LocalDate.of(now.getYear(), 12, 31);
 
-        long yearlyLeavesCount = leaves.stream()
-                .filter(l -> l.getEmployee().getId().equals(employeeId))
-                .filter(l -> l.getStartDate().getYear() == currentYear || l.getEndDate().getYear() == currentYear)
-                .mapToLong(l -> {
-                    // Calculate intersection with current year
-                    LocalDate start = l.getStartDate().getYear() < currentYear ? LocalDate.of(currentYear, 1, 1)
-                            : l.getStartDate();
-                    LocalDate end = l.getEndDate().getYear() > currentYear ? LocalDate.of(currentYear, 12, 31)
-                            : l.getEndDate();
+        root.cyb.mh.attendancesystem.dto.EmployeeRangeReportDto annualReport = reportService.getEmployeeRangeReport(
+                employeeId, startOfYear, endOfYear);
 
-                    if (start.isAfter(end))
-                        return 0;
-                    return java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
-                })
-                .sum();
-
-        int totalTaken = (int) yearlyLeavesCount;
-        int paidTaken = Math.min(totalTaken, quota);
-        int unpaidTaken = Math.max(0, totalTaken - quota);
+        int totalTaken = annualReport != null ? annualReport.getTotalLeaves() : 0;
+        // Logic for paid/unpaid split is in RangeReport? Yes, totalPaidLeaves
+        int paidTaken = annualReport != null ? annualReport.getTotalPaidLeaves() : 0;
+        int unpaidTaken = annualReport != null ? annualReport.getTotalUnpaidLeaves() : 0;
 
         model.addAttribute("annualQuota", quota);
         model.addAttribute("yearlyLeavesTaken", totalTaken);
         model.addAttribute("paidLeavesTaken", paidTaken);
         model.addAttribute("unpaidLeavesTaken", unpaidTaken);
-    }
 
-    private void calculateMonthlyStats(Model model, List<AttendanceLog> allLogs, WorkSchedule schedule,
-            String employeeId) {
-        LocalDate now = LocalDate.now();
-        YearMonth currentYearMonth = YearMonth.from(now);
-
-        // Filter logs for current month
-        List<AttendanceLog> monthLogs = allLogs.stream()
-                .filter(log -> YearMonth.from(log.getTimestamp()).equals(currentYearMonth))
-                .collect(Collectors.toList());
-
-        // Days Present (Count distinct days)
-        long daysPresent = monthLogs.stream()
-                .map(log -> log.getTimestamp().toLocalDate())
-                .distinct()
-                .count();
-        model.addAttribute("daysPresent", daysPresent);
-
-        // Late & Early Stats
-        int lateCount = 0;
-        int earlyCount = 0;
-
-        if (schedule != null) {
-            for (LocalDate date = currentYearMonth.atDay(1); !date.isAfter(now); date = date.plusDays(1)) {
-                LocalDate finalDate = date;
-                List<AttendanceLog> dayLogs = monthLogs.stream()
-                        .filter(log -> log.getTimestamp().toLocalDate().equals(finalDate))
-                        .sorted((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()))
-                        .collect(Collectors.toList());
-
-                if (!dayLogs.isEmpty()) {
-                    // Check In (First Log)
-                    LocalTime checkIn = dayLogs.get(0).getTimestamp().toLocalTime();
-                    LocalTime startTime = schedule.getStartTime().plusMinutes(schedule.getLateToleranceMinutes()); // Fixed
-                                                                                                                   // getter
-                    if (checkIn.isAfter(startTime)) {
-                        lateCount++;
-                    }
-
-                    // Check Out (Last Log) - Logic for Early Departure
-                    // Only calculate if we have at least 2 logs (In and Out) or distinct timestamps
-                    if (dayLogs.size() > 1) {
-                        LocalTime checkOut = dayLogs.get(dayLogs.size() - 1).getTimestamp().toLocalTime();
-
-                        // Calculate allowed earliest departure time (EndTime - Tolerance)
-                        LocalTime allowedExitTime = schedule.getEndTime()
-                                .minusMinutes(schedule.getEarlyLeaveToleranceMinutes());
-
-                        // If check out is BEFORE Allowed Exit Time
-                        if (checkOut.isBefore(allowedExitTime)) {
-                            earlyCount++;
-                        }
-                    }
-                }
-            }
-        }
-        model.addAttribute("lateCount", lateCount);
-        model.addAttribute("earlyCount", earlyCount);
-
-        // Leaves Calculation (Monthly)
-        int leaveCount = 0;
-        if (employeeId != null) {
-            final String empId = employeeId;
-            List<root.cyb.mh.attendancesystem.model.LeaveRequest> leaves = leaveRequestRepository
-                    .findByStatusOrderByCreatedAtDesc(root.cyb.mh.attendancesystem.model.LeaveRequest.Status.APPROVED);
-
-            long leavesThisMonth = leaves.stream()
-                    .filter(l -> l.getEmployee().getId().equals(empId))
-                    .filter(l -> {
-                        // Check overlap with current month
-                        LocalDate start = l.getStartDate();
-                        LocalDate end = l.getEndDate();
-                        // simple check: if any day of leave is in current month
-                        return !start.isAfter(now) && !end.isBefore(currentYearMonth.atDay(1));
-                    })
-                    .mapToLong(l -> {
-                        // Count days in this month
-                        LocalDate s = l.getStartDate().isBefore(currentYearMonth.atDay(1)) ? currentYearMonth.atDay(1)
-                                .plusDays(0) // hack to copy
-                                : l.getStartDate();
-                        // Count up to 'now' or end of month? Let's say end of month logic for stats
-                        LocalDate monthEnd = currentYearMonth.atEndOfMonth();
-                        LocalDate realEnd = l.getEndDate().isAfter(monthEnd) ? monthEnd : l.getEndDate();
-
-                        if (s.isAfter(realEnd))
-                            return 0;
-
-                        return java.time.temporal.ChronoUnit.DAYS.between(s, realEnd) + 1;
-                    })
-                    .sum();
-            leaveCount = (int) leavesThisMonth;
-        }
-        model.addAttribute("leaveCount", leaveCount);
+        return "employee-dashboard";
     }
 
     @GetMapping("/employee/attendance/history")
