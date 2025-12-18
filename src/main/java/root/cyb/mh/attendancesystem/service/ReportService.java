@@ -38,11 +38,14 @@ public class ReportService {
     @Autowired
     private root.cyb.mh.attendancesystem.repository.LeaveRequestRepository leaveRequestRepository;
 
+    @Autowired
+    private ShiftService shiftService;
+
     public Page<DailyAttendanceDto> getDailyReport(LocalDate date, Long departmentId, Pageable pageable) {
         List<DailyAttendanceDto> report = new ArrayList<>();
 
         // Get Work Schedule
-        WorkSchedule schedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
+        WorkSchedule globalSchedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
 
         // Get Employees (Filter by Dept if provided)
         List<Employee> allFilteredEmployees;
@@ -81,6 +84,8 @@ public class ReportService {
             dto.setEmployeeId(emp.getId());
             dto.setEmployeeName(emp.getName());
             dto.setDepartmentName(emp.getDepartment() != null ? emp.getDepartment().getName() : "Unassigned");
+
+            WorkSchedule schedule = resolveSchedule(emp.getId(), date, globalSchedule);
 
             // Filter logs for this employee
             List<AttendanceLog> empLogs = logs.stream()
@@ -166,7 +171,7 @@ public class ReportService {
         List<LocalDate> weekDates = startOfWeek.datesUntil(endOfWeek.plusDays(1)).collect(Collectors.toList());
 
         // Configs
-        WorkSchedule schedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
+        WorkSchedule globalSchedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
         List<root.cyb.mh.attendancesystem.model.PublicHoliday> holidays = publicHolidayRepository.findAll();
 
         List<Employee> allFilteredEmployees;
@@ -202,6 +207,8 @@ public class ReportService {
             int present = 0, absent = 0, late = 0, early = 0, leave = 0;
 
             for (LocalDate date : weekDates) {
+                WorkSchedule schedule = resolveSchedule(emp.getId(), date, globalSchedule);
+
                 // Check if Holiday/Weekend
                 boolean isWeekend = schedule.getWeekendDays() != null
                         && schedule.getWeekendDays().contains(String.valueOf(date.getDayOfWeek().getValue()));
@@ -316,7 +323,7 @@ public class ReportService {
         List<LocalDate> weekDates = startOfWeek.datesUntil(endOfWeek.plusDays(1)).collect(Collectors.toList());
 
         // Configs
-        WorkSchedule schedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
+        WorkSchedule globalSchedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
         List<root.cyb.mh.attendancesystem.model.PublicHoliday> holidays = publicHolidayRepository.findAll();
         List<AttendanceLog> allLogs = attendanceLogRepository.findByTimestampBetween(
                 startOfWeek.atStartOfDay(), endOfWeek.atTime(LocalTime.MAX));
@@ -328,6 +335,7 @@ public class ReportService {
         int present = 0, absent = 0, late = 0, early = 0, leaves = 0;
 
         for (LocalDate date : weekDates) {
+            WorkSchedule schedule = resolveSchedule(emp.getId(), date, globalSchedule);
             root.cyb.mh.attendancesystem.dto.EmployeeWeeklyDetailDto.DailyDetail daily = new root.cyb.mh.attendancesystem.dto.EmployeeWeeklyDetailDto.DailyDetail();
             daily.setDate(date);
             daily.setDayOfWeek(date.getDayOfWeek().name());
@@ -453,9 +461,11 @@ public class ReportService {
         List<LocalDate> monthDates = startOfMonth.datesUntil(endOfMonth.plusDays(1)).collect(Collectors.toList());
 
         // Configs
-        WorkSchedule schedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
+        WorkSchedule globalSchedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
         List<root.cyb.mh.attendancesystem.model.PublicHoliday> holidays = publicHolidayRepository.findAll();
-        int defaultQuota = schedule.getDefaultAnnualLeaveQuota() != null ? schedule.getDefaultAnnualLeaveQuota() : 12;
+        int defaultQuota = globalSchedule.getDefaultAnnualLeaveQuota() != null
+                ? globalSchedule.getDefaultAnnualLeaveQuota()
+                : 12;
 
         // Filter Employees
         List<Employee> allFilteredEmployees;
@@ -496,6 +506,8 @@ public class ReportService {
             int remainingQuota = Math.max(0, effectiveQuota - leavesTakenBefore);
 
             for (LocalDate date : monthDates) {
+                WorkSchedule schedule = resolveSchedule(emp.getId(), date, globalSchedule);
+
                 // Priority 1: Check Leave FIRST overrides everything (Logs, Weekend, etc.)
                 boolean onLeave = isEmployeeOnLeave(emp.getId(), date, allLeaves);
                 if (onLeave) {
@@ -588,9 +600,11 @@ public class ReportService {
         List<LocalDate> monthDates = startOfMonth.datesUntil(endOfMonth.plusDays(1)).collect(Collectors.toList());
 
         // Configs
-        WorkSchedule schedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
+        WorkSchedule globalSchedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
         List<root.cyb.mh.attendancesystem.model.PublicHoliday> holidays = publicHolidayRepository.findAll();
-        int defaultQuota = schedule.getDefaultAnnualLeaveQuota() != null ? schedule.getDefaultAnnualLeaveQuota() : 12;
+        int defaultQuota = globalSchedule.getDefaultAnnualLeaveQuota() != null
+                ? globalSchedule.getDefaultAnnualLeaveQuota()
+                : 12;
 
         List<AttendanceLog> allLogs = attendanceLogRepository.findByTimestampBetween(
                 startOfMonth.atStartOfDay(), endOfMonth.atTime(LocalTime.MAX));
@@ -608,6 +622,8 @@ public class ReportService {
         int remainingQuota = Math.max(0, effectiveQuota - leavesTakenBefore);
 
         for (LocalDate date : monthDates) {
+            WorkSchedule schedule = resolveSchedule(emp.getId(), date, globalSchedule);
+
             root.cyb.mh.attendancesystem.dto.EmployeeWeeklyDetailDto.DailyDetail daily = new root.cyb.mh.attendancesystem.dto.EmployeeWeeklyDetailDto.DailyDetail();
             daily.setDate(date);
             daily.setDayOfWeek(date.getDayOfWeek().name());
@@ -784,5 +800,20 @@ public class ReportService {
 
         rangeDto.setMonthlyReports(monthlyReports);
         return rangeDto;
+    }
+
+    private WorkSchedule resolveSchedule(String employeeId, LocalDate date, WorkSchedule globalDefault) {
+        root.cyb.mh.attendancesystem.model.Shift specificShift = shiftService.getShiftForDate(employeeId, date);
+        if (specificShift == null) {
+            return globalDefault;
+        }
+        WorkSchedule effective = new WorkSchedule();
+        effective.setStartTime(specificShift.getStartTime());
+        effective.setEndTime(specificShift.getEndTime());
+        effective.setLateToleranceMinutes(specificShift.getLateToleranceMinutes());
+        effective.setEarlyLeaveToleranceMinutes(specificShift.getEarlyLeaveToleranceMinutes());
+        effective.setWeekendDays(globalDefault.getWeekendDays());
+        effective.setDefaultAnnualLeaveQuota(globalDefault.getDefaultAnnualLeaveQuota());
+        return effective;
     }
 }

@@ -72,6 +72,10 @@
                     th:classappend="${activeLink == 'devices'} ? 'active'">
                     <i class="fas fa-server me-2"></i> Devices
                 </a>
+                <a href="/admin/shifts" class="list-group-item list-group-item-action"
+                    th:classappend="${activeLink == 'shifts'} ? 'active'">
+                    <i class="fas fa-clock me-2"></i> Shifts
+                </a>
                 <a href="/settings" class="list-group-item list-group-item-action"
                     th:classappend="${activeLink == 'settings'} ? 'active'">
                     <i class="fas fa-cogs me-2"></i> Settings
