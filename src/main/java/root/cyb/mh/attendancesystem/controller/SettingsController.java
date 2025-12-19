@@ -44,6 +44,8 @@ public class SettingsController {
             existing.setEndTime(schedule.getEndTime());
         existing.setLateToleranceMinutes(schedule.getLateToleranceMinutes());
         existing.setEarlyLeaveToleranceMinutes(schedule.getEarlyLeaveToleranceMinutes());
+        // Save Default Annual Leave Quota
+        existing.setDefaultAnnualLeaveQuota(schedule.getDefaultAnnualLeaveQuota());
 
         // Convert list [6, 7] to string "6,7"
         if (weekendDaysList != null) {
