@@ -115,7 +115,8 @@
                                                 th:data-role="${emp.role}" th:data-email="${emp.email}"
                                                 th:data-dept-id="${emp.department != null ? emp.department.id : ''}"
                                                 th:data-quota="${emp.annualLeaveQuota}"
-                                                th:data-is-guest="${emp.isGuest}" onclick="editEmployee(this)">
+                                                th:data-is-guest="${emp.isGuest}"
+                                                th:data-joining-date="${emp.joiningDate}" onclick="editEmployee(this)">
                                                 Edit
                                             </button>
                                             <a th:href="@{/employees/delete/{id}(id=${emp.id})}"
@@ -189,6 +190,10 @@
                                         <input type="number" class="form-control" id="empQuota" name="annualLeaveQuota"
                                             placeholder="Leave empty to use Global Default">
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Joining Date</label>
+                                        <input type="date" class="form-control" id="empJoiningDate" name="joiningDate">
+                                    </div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary"
@@ -239,6 +244,7 @@
                 var email = btn.getAttribute('data-email');
                 var deptId = btn.getAttribute('data-dept-id');
                 var isGuest = btn.getAttribute('data-is-guest') === 'true';
+                var joiningDate = btn.getAttribute('data-joining-date');
 
                 document.getElementById('empModalTitle').innerText = 'Edit Employee';
                 document.getElementById('empId').value = id;
@@ -249,6 +255,7 @@
                 document.getElementById('empDept').value = deptId;
                 document.getElementById('empQuota').value = btn.getAttribute('data-quota');
                 document.getElementById('empIsGuest').checked = isGuest;
+                document.getElementById('empJoiningDate').value = joiningDate;
                 new bootstrap.Modal(document.getElementById('addEmployeeModal')).show();
             }
 
@@ -263,6 +270,7 @@
                 document.getElementById('empDept').value = '';
                 document.getElementById('empIsGuest').checked = false;
                 document.getElementById('empQuota').value = '';
+                document.getElementById('empJoiningDate').value = '';
                 document.getElementById('empUsername').value = ''; // Clear username
             });
             document.getElementById('empModalTitle').innerText = 'Add Employee';

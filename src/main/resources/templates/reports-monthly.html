@@ -90,7 +90,7 @@
                             </select>
 
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-filter"></i> Filter
+                                <i class="fas fa-filter"></i> View
                             </button>
                         </form>
                     </div>
@@ -192,7 +192,7 @@
                                 <tbody>
                                     <tr th:each="row : ${report}">
                                         <td>
-                                            <a th:href="@{'/reports/monthly/' + ${row.employeeId} + '?year=' + ${selectedYear} + '&month=' + ${selectedMonth}}"
+                                            <a th:href="@{'/reports/monthly/' + ${row.employeeId} + '?year=' + ${row.year} + '&month=' + ${row.month}}"
                                                 class="text-decoration-none fw-bold text-dark"
                                                 th:text="${row.employeeName}">John Doe</a>
                                             <div class="small text-muted" th:text="${row.employeeId}">ID:1</div>

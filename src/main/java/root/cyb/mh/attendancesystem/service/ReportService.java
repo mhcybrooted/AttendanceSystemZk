@@ -100,6 +100,14 @@ public class ReportService {
                     && schedule.getWeekendDays().contains(String.valueOf(date.getDayOfWeek().getValue()));
             boolean isPublicHoliday = holidays.stream().anyMatch(h -> h.getDate().equals(date));
 
+            // Check Joining Date
+            if (emp.getJoiningDate() != null && date.isBefore(emp.getJoiningDate())) {
+                dto.setStatus("NOT JOINED");
+                dto.setStatusColor("secondary");
+                fullReport.add(dto);
+                continue;
+            }
+
             if (isWeekend || isPublicHoliday) {
                 dto.setStatus("WEEKEND/HOLIDAY");
                 dto.setStatusColor("secondary"); // Gray
@@ -254,6 +262,12 @@ public class ReportService {
 
                 String status = "";
 
+                if (emp.getJoiningDate() != null && date.isBefore(emp.getJoiningDate())) {
+                    status = "NOT JOINED";
+                    dto.getDailyStatus().put(date, status);
+                    continue;
+                }
+
                 // Get logs for this emp & date
                 List<AttendanceLog> dailyLogs = allLogs.stream()
                         .filter(l -> l.getEmployeeId().equals(emp.getId())
@@ -392,6 +406,13 @@ public class ReportService {
 
             String status = "";
             String color = "";
+
+            if (emp.getJoiningDate() != null && date.isBefore(emp.getJoiningDate())) {
+                daily.setStatus("NOT JOINED");
+                daily.setStatusColor("secondary");
+                details.add(daily);
+                continue;
+            }
 
             if (isWeekend || isPublicHoliday) {
                 status = "WEEKEND";
@@ -571,6 +592,11 @@ public class ReportService {
                                     && l.getTimestamp().toLocalDate().equals(date))
                             .collect(Collectors.toList());
 
+                    if (emp.getJoiningDate() != null && date.isBefore(emp.getJoiningDate())) {
+                        // Skip checking attendance for days before joining
+                        continue;
+                    }
+
                     if (!dailyLogs.isEmpty()) {
                         present++;
                         if (!isWeekend && !isPublicHoliday) {
@@ -661,6 +687,13 @@ public class ReportService {
             root.cyb.mh.attendancesystem.dto.EmployeeWeeklyDetailDto.DailyDetail daily = new root.cyb.mh.attendancesystem.dto.EmployeeWeeklyDetailDto.DailyDetail();
             daily.setDate(date);
             daily.setDayOfWeek(date.getDayOfWeek().name());
+
+            if (emp.getJoiningDate() != null && date.isBefore(emp.getJoiningDate())) {
+                daily.setStatus("NOT JOINED");
+                daily.setStatusColor("secondary");
+                details.add(daily);
+                continue;
+            }
 
             // Priority 1: Check Leave FIRST overrides everything
             boolean onLeave = isEmployeeOnLeave(emp.getId(), date, allLeaves);
