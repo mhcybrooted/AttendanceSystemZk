@@ -78,6 +78,7 @@
                                                     th:text="${sortDir == 'asc' ? '▲' : '▼'}"></span>
                                             </a>
                                         </th>
+                                        <th>Quota</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -103,10 +104,17 @@
                                         <td th:text="${emp.role}">Developer</td>
                                         <td th:text="${emp.email}">john@example.com</td>
                                         <td>
+                                            <span th:if="${emp.annualLeaveQuota != null}"
+                                                th:text="${emp.annualLeaveQuota}">20</span>
+                                            <span th:if="${emp.annualLeaveQuota == null}"
+                                                class="badge bg-secondary">Default</span>
+                                        </td>
+                                        <td>
                                             <button class="btn btn-warning btn-sm me-1" type="button"
                                                 th:data-id="${emp.id}" th:data-name="${emp.name}"
                                                 th:data-role="${emp.role}" th:data-email="${emp.email}"
                                                 th:data-dept-id="${emp.department != null ? emp.department.id : ''}"
+                                                th:data-quota="${emp.annualLeaveQuota}"
                                                 th:data-is-guest="${emp.isGuest}" onclick="editEmployee(this)">
                                                 Edit
                                             </button>
@@ -173,9 +181,13 @@
                                             placeholder="john@example.com">
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label">Login Password (Username)</label>
                                         <input type="text" class="form-control" id="empUsername" name="username"
                                             placeholder="Set password for employee login">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Annual Leave Quota (Days)</label>
+                                        <input type="number" class="form-control" id="empQuota" name="annualLeaveQuota"
+                                            placeholder="Leave empty to use Global Default">
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -235,6 +247,7 @@
                 document.getElementById('empRole').value = role;
                 document.getElementById('empEmail').value = email;
                 document.getElementById('empDept').value = deptId;
+                document.getElementById('empQuota').value = btn.getAttribute('data-quota');
                 document.getElementById('empIsGuest').checked = isGuest;
                 new bootstrap.Modal(document.getElementById('addEmployeeModal')).show();
             }
@@ -249,6 +262,7 @@
                 document.getElementById('empEmail').value = '';
                 document.getElementById('empDept').value = '';
                 document.getElementById('empIsGuest').checked = false;
+                document.getElementById('empQuota').value = '';
                 document.getElementById('empUsername').value = ''; // Clear username
             });
             document.getElementById('empModalTitle').innerText = 'Add Employee';
@@ -257,7 +271,10 @@
             document.getElementById('empName').value = '';
             document.getElementById('empRole').value = '';
             document.getElementById('empEmail').value = '';
+            document.getElementById('empRole').value = '';
+            document.getElementById('empEmail').value = '';
             document.getElementById('empDept').value = '';
+            document.getElementById('empQuota').value = '';
 
             // Bulk Actions Logic
             function toggleAll(source) {
