@@ -15,7 +15,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import root.cyb.mh.attendancesystem.dto.MonthlySummaryDto;
 
 @Controller
 public class DashboardController {
@@ -98,6 +100,104 @@ public class DashboardController {
                                 .filter(d -> !guestIds.contains(d.getEmployeeId()))
                                 .filter(d -> d.getStatus().contains("LATE"))
                                 .count();
+
+                // --- INSPIRATION METRICS ---
+
+                // 1. Early Birds (Today's first 5 arrivals)
+                // Filter present/late/early, exclude guests, sort by inTime
+                List<DailyAttendanceDto> earlyBirds = dailyReport.stream()
+                                .filter(d -> !guestIds.contains(d.getEmployeeId()))
+                                .filter(d -> d.getInTime() != null)
+                                .sorted(Comparator.comparing(DailyAttendanceDto::getInTime))
+                                .limit(5)
+                                .collect(Collectors.toList());
+                model.addAttribute("earlyBirds", earlyBirds);
+
+                // 2. Department Champion (Dept with highest Present %)
+                // Group by Dept Name
+                Map<String, List<DailyAttendanceDto>> byDept = dailyReport.stream()
+                                .filter(d -> d.getDepartmentName() != null
+                                                && !d.getDepartmentName().equals("Unassigned"))
+                                .collect(Collectors.groupingBy(DailyAttendanceDto::getDepartmentName));
+
+                String championDept = "N/A";
+                double maxPercent = -1.0;
+
+                for (Map.Entry<String, List<DailyAttendanceDto>> entry : byDept.entrySet()) {
+                        if (entry.getKey().equalsIgnoreCase("Guest"))
+                                continue; // Explicitly skip Guest dept
+
+                        long deptTotal = entry.getValue().size(); // All employees in dept
+                        if (deptTotal == 0)
+                                continue;
+
+                        long deptPresent = entry.getValue().stream()
+                                        .filter(d -> d.getStatus().contains("PRESENT") || d.getStatus().contains("LATE")
+                                                        || d.getStatus().contains("EARLY"))
+                                        .count();
+
+                        double percent = (double) deptPresent / deptTotal;
+                        if (percent > maxPercent) {
+                                maxPercent = percent;
+                                championDept = entry.getKey();
+                        }
+                }
+
+                if (maxPercent <= 0) {
+                        championDept = "No Data";
+                        maxPercent = 0;
+                }
+                model.addAttribute("championDept", championDept);
+                model.addAttribute("championPercent", Math.round(maxPercent * 100));
+
+                // 3. Attendance Health Score (Company Wide On-Time %)
+                // On Time = Present AND NOT Late
+                long onTimeCount = dailyReport.stream()
+                                // guest filtered already by service
+                                .filter(d -> d.getStatus().contains("PRESENT") || d.getStatus().equals("EARLY LEAVE")) // Strictly
+                                                                                                                       // "PRESENT"
+                                                                                                                       // or
+                                                                                                                       // "EARLY"
+                                                                                                                       // (as
+                                                                                                                       // long
+                                                                                                                       // as
+                                                                                                                       // not
+                                                                                                                       // late)
+                                .filter(d -> !d.getStatus().contains("LATE"))
+                                .count();
+
+                // Base for % is Total Present (or Total Employees? Usually Health is of those
+                // who came, how many were on time? Or of all content?)
+                // Let's do % of Present Employees who were On Time.
+                long totalPresentCalculated = dailyReport.stream()
+                                .filter(d -> d.getStatus().contains("PRESENT") || d.getStatus().contains("LATE")
+                                                || d.getStatus().contains("EARLY"))
+                                .count();
+
+                int healthScore = totalPresentCalculated > 0 ? (int) ((onTimeCount * 100) / totalPresentCalculated) : 0;
+                model.addAttribute("healthScore", healthScore);
+
+                // 4. Punctuality Stars & Streak (From Monthly Report)
+                // Fetch current month report
+                List<Integer> monthList = java.util.Collections.singletonList(today.getMonthValue());
+                List<MonthlySummaryDto> monthlyStats = reportService.getMonthlyReport(today.getYear(), monthList, null,
+                                org.springframework.data.domain.PageRequest.of(0, 1000)).getContent();
+
+                // Sort by Present Count DESC, Late Count ASC
+                List<MonthlySummaryDto> punctualityStars = monthlyStats.stream()
+                                // ReportService might include guests? Check getMonthlyReport logic.
+                                // I don't recall explicit guest filter in getMonthlyReport.
+                                // I should filter guests here to be safe.
+                                .filter(d -> !guestIds.contains(d.getEmployeeId()))
+                                .sorted(Comparator.comparingInt(MonthlySummaryDto::getPresentCount).reversed()
+                                                .thenComparingInt(MonthlySummaryDto::getLateCount))
+                                .limit(5)
+                                .collect(Collectors.toList());
+                model.addAttribute("punctualityStars", punctualityStars);
+
+                // Streak / On Fire: Top Employee by Present Count
+                MonthlySummaryDto streakTop = punctualityStars.isEmpty() ? null : punctualityStars.get(0);
+                model.addAttribute("streakEmployee", streakTop);
 
                 // Status Breakdown
                 long absentCount = totalEmployees - presentCount - leaveCount;

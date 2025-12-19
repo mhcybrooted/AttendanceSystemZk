@@ -16,8 +16,12 @@ import root.cyb.mh.attendancesystem.service.ReportService;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import root.cyb.mh.attendancesystem.dto.DailyAttendanceDto;
+import root.cyb.mh.attendancesystem.dto.MonthlySummaryDto;
 
 @Controller
 public class EmployeeDashboardController {
@@ -100,6 +104,83 @@ public class EmployeeDashboardController {
         model.addAttribute("yearlyLeavesTaken", totalTaken);
         model.addAttribute("paidLeavesTaken", paidTaken);
         model.addAttribute("unpaidLeavesTaken", unpaidTaken);
+
+        // --- INSPIRATION METRICS (Global) ---
+        // Fetch Global Data for Leaderboards
+        List<Employee> allEmployees = employeeRepository.findAll();
+        List<String> guestIds = allEmployees.stream().filter(Employee::isGuest).map(Employee::getId)
+                .collect(Collectors.toList());
+
+        // Daily Report for Global Stats
+        List<DailyAttendanceDto> dailyReport = reportService
+                .getDailyReport(now, null, null, org.springframework.data.domain.PageRequest.of(0, 5000)).getContent();
+
+        // 1. Early Birds
+        List<DailyAttendanceDto> earlyBirds = dailyReport.stream()
+                .filter(d -> !guestIds.contains(d.getEmployeeId()))
+                .filter(d -> d.getInTime() != null)
+                .sorted(Comparator.comparing(DailyAttendanceDto::getInTime))
+                .limit(5)
+                .collect(Collectors.toList());
+        model.addAttribute("earlyBirds", earlyBirds);
+
+        // 2. Department Champion
+        Map<String, List<DailyAttendanceDto>> byDept = dailyReport.stream()
+                .filter(d -> d.getDepartmentName() != null && !d.getDepartmentName().equals("Unassigned"))
+                .collect(Collectors.groupingBy(DailyAttendanceDto::getDepartmentName));
+
+        String championDept = "N/A";
+        double maxPercent = -1.0;
+        for (Map.Entry<String, List<DailyAttendanceDto>> entry : byDept.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase("Guest"))
+                continue;
+            long deptTotal = entry.getValue().size();
+            if (deptTotal == 0)
+                continue;
+            long deptPresent = entry.getValue().stream()
+                    .filter(d -> d.getStatus().contains("PRESENT") || d.getStatus().contains("LATE")
+                            || d.getStatus().contains("EARLY"))
+                    .count();
+            double percent = (double) deptPresent / deptTotal;
+            if (percent > maxPercent) {
+                maxPercent = percent;
+                championDept = entry.getKey();
+            }
+        }
+        if (maxPercent <= 0) {
+            championDept = "No Data";
+            maxPercent = 0;
+        }
+        model.addAttribute("championDept", championDept);
+        model.addAttribute("championPercent", Math.round(maxPercent * 100));
+
+        // 3. Health Score
+        long onTimeCount = dailyReport.stream()
+                .filter(d -> d.getStatus().contains("PRESENT") || d.getStatus().equals("EARLY LEAVE"))
+                .filter(d -> !d.getStatus().contains("LATE"))
+                .count();
+        long totalPresentCalculated = dailyReport.stream()
+                .filter(d -> d.getStatus().contains("PRESENT") || d.getStatus().contains("LATE")
+                        || d.getStatus().contains("EARLY"))
+                .count();
+        int healthScore = totalPresentCalculated > 0 ? (int) ((onTimeCount * 100) / totalPresentCalculated) : 0;
+        model.addAttribute("healthScore", healthScore);
+
+        // 4. Punctuality Stars & Streak
+        List<Integer> monthList = java.util.Collections.singletonList(now.getMonthValue());
+        List<MonthlySummaryDto> monthlyStats = reportService.getMonthlyReport(now.getYear(), monthList, null,
+                org.springframework.data.domain.PageRequest.of(0, 1000)).getContent();
+
+        List<MonthlySummaryDto> punctualityStars = monthlyStats.stream()
+                .filter(d -> !guestIds.contains(d.getEmployeeId()))
+                .sorted(Comparator.comparingInt(MonthlySummaryDto::getPresentCount).reversed()
+                        .thenComparingInt(MonthlySummaryDto::getLateCount))
+                .limit(5)
+                .collect(Collectors.toList());
+        model.addAttribute("punctualityStars", punctualityStars);
+
+        MonthlySummaryDto streakTop = punctualityStars.isEmpty() ? null : punctualityStars.get(0);
+        model.addAttribute("streakEmployee", streakTop);
 
         return "employee-dashboard";
     }
