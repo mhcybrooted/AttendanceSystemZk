@@ -47,6 +47,9 @@ public class EmployeeDashboardController {
     private root.cyb.mh.attendancesystem.repository.LeaveRequestRepository leaveRequestRepository;
 
     @Autowired
+    private root.cyb.mh.attendancesystem.repository.PublicHolidayRepository publicHolidayRepository;
+
+    @Autowired
     private ReportService reportService;
 
     @Autowired
@@ -120,6 +123,22 @@ public class EmployeeDashboardController {
         model.addAttribute("yearlyLeavesTaken", totalTaken);
         model.addAttribute("paidLeavesTaken", paidTaken);
         model.addAttribute("unpaidLeavesTaken", unpaidTaken);
+
+        // 6. Next Holiday Countdown
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.util.Optional<root.cyb.mh.attendancesystem.model.PublicHoliday> nextHoliday = publicHolidayRepository
+                .findAll().stream()
+                .filter(h -> h.getDate().isAfter(today))
+                .sorted(java.util.Comparator.comparing(root.cyb.mh.attendancesystem.model.PublicHoliday::getDate))
+                .findFirst();
+
+        if (nextHoliday.isPresent()) {
+            long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, nextHoliday.get().getDate());
+            model.addAttribute("nextHoliday", nextHoliday.get());
+            model.addAttribute("daysUntilHoliday", daysUntil);
+        } else {
+            model.addAttribute("nextHoliday", null);
+        }
 
         // --- INSPIRATION METRICS (Global) ---
         // Fetch Global Data for Leaderboards

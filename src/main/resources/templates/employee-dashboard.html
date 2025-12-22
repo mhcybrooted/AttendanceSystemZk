@@ -150,6 +150,34 @@
                 });
             </script>
 
+            <!-- JavaScript for Countdown -->
+            <script th:inline="javascript">
+                // ... existing script ...
+            </script>
+
+            <!-- Holiday Countdown Widget -->
+            <div class="row mb-4" th:if="${nextHoliday != null}">
+                <div class="col-12">
+                    <div class="card text-white shadow-sm border-0 position-relative overflow-hidden"
+                        style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                        <div class="card-body text-center p-4">
+                            <div class="d-flex justify-content-center align-items-center mb-2">
+                                <i class="fas fa-umbrella-beach fa-2x me-3"></i>
+                                <h5 class="text-uppercase fw-bold mb-0">Upcoming Holiday</h5>
+                            </div>
+
+                            <h2 class="display-4 fw-bold my-2" th:text="${daysUntilHoliday + ' Days'}">5 Days</h2>
+                            <p class="h5 mb-0 opacity-75">
+                                until <span th:text="${nextHoliday.name}">New Year</span>
+                                <small class="d-block mt-1" style="font-size: 0.8rem;"
+                                    th:text="${#temporals.format(nextHoliday.date, 'EEEE, dd MMMM yyyy')}">Monday, 01
+                                    January 2024</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Styles for Inspiration Widgets -->
             <style>
                 .card-header-custom {
