@@ -43,6 +43,7 @@ public class Employee {
 
     // Payroll
     private Double monthlySalary;
+    private Double fixedAllowance; // Recurring every month
 
     public int getEffectiveQuota(int globalDefault) {
         return annualLeaveQuota != null ? annualLeaveQuota : globalDefault;

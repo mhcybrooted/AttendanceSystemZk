@@ -116,6 +116,7 @@
                                                 th:data-dept-id="${emp.department != null ? emp.department.id : ''}"
                                                 th:data-quota="${emp.annualLeaveQuota}"
                                                 th:data-salary="${emp.monthlySalary}" th:data-is-guest="${emp.isGuest}"
+                                                th:data-allowance="${emp.fixedAllowance}"
                                                 th:data-joining-date="${emp.joiningDate}" onclick="editEmployee(this)">
                                                 Edit
                                             </button>
@@ -196,6 +197,11 @@
                                             id="monthlySalary" placeholder="Enter basic monthly salary">
                                     </div>
                                     <div class="mb-3">
+                                        <label class="form-label">Fixed Allowance (Recurring)</label>
+                                        <input type="number" step="0.01" class="form-control" name="fixedAllowance"
+                                            id="fixedAllowance" placeholder="e.g. Housing/Transport">
+                                    </div>
+                                    <div class="mb-3">
                                         <label class="form-label">Joining Date</label>
                                         <input type="date" class="form-control" id="empJoiningDate" name="joiningDate">
                                     </div>
@@ -248,20 +254,25 @@
                 var role = btn.getAttribute('data-role');
                 var email = btn.getAttribute('data-email');
                 var deptId = btn.getAttribute('data-dept-id');
+                var quota = btn.getAttribute('data-quota');
+                var salary = btn.getAttribute('data-salary');
+                var allowance = btn.getAttribute('data-allowance');
+                var username = btn.getAttribute('data-username'); // If available
                 var isGuest = btn.getAttribute('data-is-guest') === 'true';
                 var joiningDate = btn.getAttribute('data-joining-date');
 
-                document.getElementById('empModalTitle').innerText = 'Edit Employee';
                 document.getElementById('empId').value = id;
-                document.getElementById('empId').readOnly = true; // Cannot change ID in edit
+                document.getElementById('empId').readOnly = true; // Cannot change ID
                 document.getElementById('empName').value = name;
                 document.getElementById('empRole').value = role;
                 document.getElementById('empEmail').value = email;
                 document.getElementById('empDept').value = deptId;
-                document.getElementById('empQuota').value = btn.getAttribute('data-quota');
-                document.getElementById('monthlySalary').value = btn.getAttribute('data-salary');
+                document.getElementById('empQuota').value = quota;
+                document.getElementById('monthlySalary').value = salary;
+                document.getElementById('fixedAllowance').value = allowance;
                 document.getElementById('empIsGuest').checked = isGuest;
                 document.getElementById('empJoiningDate').value = joiningDate;
+                document.getElementById('empModalTitle').innerText = 'Edit Employee';
                 new bootstrap.Modal(document.getElementById('addEmployeeModal')).show();
             }
 

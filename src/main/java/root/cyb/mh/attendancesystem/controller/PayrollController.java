@@ -109,6 +109,26 @@ public class PayrollController {
         return "redirect:/payroll";
     }
 
+    // Phase 4: Update Bonus
+    @PostMapping("/payroll/bonus/update")
+    public String updateBonus(@RequestParam Long payslipId, @RequestParam Double amount) {
+        Payslip slip = payslipRepository.findById(payslipId).orElse(null);
+        if (slip != null && slip.getStatus() == Payslip.Status.DRAFT) {
+            slip.setBonusAmount(amount);
+
+            // Recalculate Net
+            double allowance = slip.getAllowanceAmount() != null ? slip.getAllowanceAmount() : 0.0;
+            double deductions = slip.getDeductionAmount() != null ? slip.getDeductionAmount() : 0.0;
+            double basic = slip.getBasicSalary() != null ? slip.getBasicSalary() : 0.0;
+
+            double net = (basic + allowance + amount) - deductions;
+
+            slip.setNetSalary(Math.round(net * 100.0) / 100.0);
+            payslipRepository.save(slip);
+        }
+        return "redirect:/payroll/details/" + (slip != null ? slip.getMonth() : "");
+    }
+
     // Employee View
     @GetMapping("/payroll/delete/{id}")
     public String deletePayslip(@PathVariable Long id,

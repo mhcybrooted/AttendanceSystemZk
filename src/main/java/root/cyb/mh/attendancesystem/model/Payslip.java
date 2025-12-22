@@ -30,6 +30,8 @@ public class Payslip {
 
     // Financials
     private Double basicSalary; // The monthly salary at the time of generation
+    private Double allowanceAmount; // Fixed Allowance
+    private Double bonusAmount; // One-time Bonus
     private Double deductionAmount;
     private Double netSalary;
 

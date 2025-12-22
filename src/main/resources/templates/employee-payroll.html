@@ -56,7 +56,7 @@
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary"
-                                            th:onclick="showPayslipModal([[${slip.employee.name}]], [[${slip.month}]], [[${slip.basicSalary}]], [[${slip.deductionAmount}]], [[${slip.netSalary}]], [[${slip.totalWorkingDays}]], [[${slip.presentDays}]], [[${slip.absentDays}]], [[${slip.lateDays}]], [[${slip.latePenaltyAmount}]])">
+                                            th:onclick="showPayslipModal([[${slip.employee.name}]], [[${slip.month}]], [[${slip.basicSalary}]], [[${slip.deductionAmount}]], [[${slip.netSalary}]], [[${slip.totalWorkingDays}]], [[${slip.presentDays}]], [[${slip.absentDays}]], [[${slip.lateDays}]], [[${slip.latePenaltyAmount}]], [[${slip.allowanceAmount}]], [[${slip.bonusAmount}]])">
                                             <i class="fas fa-eye"></i> View
                                         </button>
                                     </td>
@@ -136,6 +136,18 @@
                                                 <td class="text-danger">Total Deductions</td>
                                                 <td class="text-end text-danger" id="psDeductions">-$200.00</td>
                                             </tr>
+                                            <tr id="allowanceRow" style="display:none;">
+                                                <td>Fixed Allowance</td>
+                                                <td class="text-end" id="psAllowance">$0.00</td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                            <tr id="bonusRow" style="display:none;">
+                                                <td>Bonus / OT</td>
+                                                <td class="text-end" id="psBonus">$0.00</td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
                                             <!-- Late Penalty Dynamic Row -->
                                             <tr id="lateRow" style="display:none;">
                                                 <td></td>
@@ -206,7 +218,7 @@
                 });
             }
 
-            function showPayslipModal(name, month, basic, ded, net, working, present, absent, lateDays, lateAmt) {
+            function showPayslipModal(name, month, basic, ded, net, working, present, absent, lateDays, lateAmt, allowance, bonus) {
                 document.getElementById('psName').innerText = name;
                 document.getElementById('psMonth').innerText = 'Month: ' + month;
 
@@ -215,6 +227,22 @@
                 document.getElementById('psBasic').innerText = fmt(basic);
                 document.getElementById('psDeductions').innerText = '-' + fmt(ded); // Ded is already positive double usually, display as negative
                 document.getElementById('psNet').innerText = fmt(net);
+
+                // Allowances
+                if (allowance && parseFloat(allowance) > 0) {
+                    document.getElementById('allowanceRow').style.display = 'table-row';
+                    document.getElementById('psAllowance').innerText = fmt(allowance);
+                } else {
+                    document.getElementById('allowanceRow').style.display = 'none';
+                }
+
+                // Bonus
+                if (bonus && parseFloat(bonus) > 0) {
+                    document.getElementById('bonusRow').style.display = 'table-row';
+                    document.getElementById('psBonus').innerText = fmt(bonus);
+                } else {
+                    document.getElementById('bonusRow').style.display = 'none';
+                }
 
                 document.getElementById('psWorkingDays').innerText = working;
                 document.getElementById('psPresent').innerText = present;

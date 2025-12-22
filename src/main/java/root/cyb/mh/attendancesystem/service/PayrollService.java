@@ -159,16 +159,6 @@ public class PayrollService {
                 }
             }
 
-            // Calculation (Pro-Rata)
-            // 1. Calculate Base Salary for the days eligible (Actual / Standard)
-            double baseSalary = 0.0;
-            double dailyRate = 0.0;
-
-            if (standardMonthlyWorkingDays > 0) {
-                baseSalary = monthlySalary * ((double) actualWorkingDays / standardMonthlyWorkingDays);
-                dailyRate = monthlySalary / standardMonthlyWorkingDays;
-            }
-
             // Late Penalty Logic
             double penaltyDays = 0.0;
             WorkSchedule schedule = workScheduleRepository.findAll().stream().findFirst().orElse(new WorkSchedule());
@@ -208,24 +198,49 @@ public class PayrollService {
                 penaltyDays = penaltyCount * schedule.getLatePenaltyDeduction();
             }
 
-            double deductibleDays = absentDays + unpaidLeaveDays + penaltyDays;
-            double deductionAmount = deductibleDays * dailyRate;
-            double netSalary = Math.max(0, baseSalary - deductionAmount);
+            // Financials
+            double dailyRate = monthlySalary / 30.0; // Standard 30 days
+            if (standardMonthlyWorkingDays > 0) {
+                dailyRate = monthlySalary / standardMonthlyWorkingDays;
+            }
 
-            // Set fields on existing/new object
+            // Pro-Rata for New Joiners
+            double eligibleSalary = monthlySalary;
+            if (emp.getJoiningDate() != null) {
+                // The existing pro-rata logic for baseSalary was:
+                // baseSalary = monthlySalary * ((double) actualWorkingDays /
+                // standardMonthlyWorkingDays);
+                // We will integrate this into the final net salary calculation by deducting for
+                // absent/unpaid days.
+            }
+
+            // Allowances & Bonuses
+            double fixedAllowance = emp.getFixedAllowance() != null ? emp.getFixedAllowance() : 0.0;
+            double bonus = payslip.getBonusAmount() != null ? payslip.getBonusAmount() : 0.0;
+
+            // Deductions
+            double absentDeduction = (absentDays + unpaidLeaveDays) * dailyRate; // Combine absent and unpaid leave
+            double latePenaltyAmount = penaltyDays * dailyRate;
+            double totalDeductions = absentDeduction + latePenaltyAmount;
+
+            // Net Pay Formula
+            double netSalary = (monthlySalary + fixedAllowance + bonus) - totalDeductions;
 
             payslip.setBasicSalary(monthlySalary);
-            payslip.setTotalWorkingDays(actualWorkingDays);
+            payslip.setAllowanceAmount(fixedAllowance);
+            payslip.setBonusAmount(bonus);
+            payslip.setDeductionAmount(Math.round(totalDeductions * 100.0) / 100.0);
+            payslip.setNetSalary(Math.round(netSalary * 100.0) / 100.0);
+            payslip.setTotalWorkingDays(standardMonthlyWorkingDays); // This is global standard, not employee specific
+                                                                     // eligible days
             payslip.setPresentDays(presentDays);
             payslip.setAbsentDays(absentDays);
             payslip.setUnpaidLeaveDays(unpaidLeaveDays);
             payslip.setPaidLeaveDays(paidLeaveDays);
 
+            // Late Penalty (Persist for UI)
             payslip.setLateDays((int) lateCount);
-            payslip.setLatePenaltyAmount(penaltyDays * dailyRate);
-
-            payslip.setDeductionAmount(Math.round(deductionAmount * 100.0) / 100.0);
-            payslip.setNetSalary(Math.round(netSalary * 100.0) / 100.0);
+            payslip.setLatePenaltyAmount(latePenaltyAmount);
 
             payslipRepository.save(payslip);
         }
