@@ -141,8 +141,78 @@ public class PayrollController {
     public String myPayroll(Model model, Principal principal) {
         String employeeId = principal.getName();
         List<Payslip> myPayslips = payslipRepository.findByEmployeeIdOrderByMonthDesc(employeeId);
+
+        // -- Financial Insights Logic --
+        int currentYear = java.time.LocalDate.now().getYear();
+
+        // Filter for current year for YTD and Bonus
+        List<Payslip> currentYearSlips = myPayslips.stream()
+                .filter(p -> p.getMonth().startsWith(String.valueOf(currentYear))) // month format "YYYY-MM"
+                .filter(p -> p.getStatus() == Payslip.Status.PAID) // Only count PAID
+                .collect(Collectors.toList());
+
+        // 1. YTD Earnings
+        double ytdEarnings = currentYearSlips.stream()
+                .mapToDouble(p -> p.getNetSalary() != null ? p.getNetSalary() : 0.0)
+                .sum();
+
+        // 2. Total Bonuses
+        double totalBonuses = currentYearSlips.stream()
+                .mapToDouble(p -> p.getBonusAmount() != null ? p.getBonusAmount() : 0.0)
+                .sum();
+
+        // 3. Best Month
+        Payslip bestMonthSlip = currentYearSlips.stream()
+                .max(Comparator.comparingDouble(p -> p.getNetSalary() != null ? p.getNetSalary() : 0.0))
+                .orElse(null);
+        String bestMonth = bestMonthSlip != null ? bestMonthSlip.getMonth() : "N/A";
+
+        // 4. Income Trend (Last 12 Months)
+        // We'll take top 12 from myPayslips (since it's ordered desc) and reverse for
+        // chart
+        List<Payslip> trendSlips = myPayslips.stream()
+                .limit(12)
+                .sorted(Comparator.comparing(Payslip::getMonth)) // Ascending for chart
+                .collect(Collectors.toList());
+
+        // Prepare simple DTOs or Maps for Chart
+        List<String> chartLabels = trendSlips.stream().map(Payslip::getMonth).collect(Collectors.toList());
+        List<Double> chartData = trendSlips.stream().map(p -> p.getNetSalary() != null ? p.getNetSalary() : 0.0)
+                .collect(Collectors.toList());
+
         model.addAttribute("payslips", myPayslips);
+        model.addAttribute("ytdEarnings", ytdEarnings);
+        model.addAttribute("totalBonuses", totalBonuses);
+        model.addAttribute("bestMonth", bestMonth);
+        model.addAttribute("chartLabels", chartLabels);
+        model.addAttribute("chartData", chartData);
+
         model.addAttribute("activeLink", "payroll");
         return "employee-payroll";
+    }
+
+    @Autowired
+    private root.cyb.mh.attendancesystem.service.ExportService exportService;
+
+    @GetMapping("/payroll/export/bank-advice")
+    public org.springframework.http.ResponseEntity<byte[]> exportBankAdvice(@RequestParam String month)
+            throws java.io.IOException {
+        List<Payslip> slips = payslipRepository.findByMonth(month);
+
+        // Filter only PAID slips? Or all? Usually advice is for payment, so assume
+        // draft/paid intended for payment.
+        // Let's filter for non-zero net salary.
+        slips = slips.stream()
+                .filter(p -> p.getNetSalary() != null && p.getNetSalary() > 0)
+                .collect(Collectors.toList());
+
+        byte[] bytes = exportService.exportBankAdviceExcel(slips);
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=bank_advice_" + month + ".xlsx")
+                .contentType(org.springframework.http.MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bytes);
     }
 }

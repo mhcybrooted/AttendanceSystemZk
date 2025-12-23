@@ -45,6 +45,10 @@ public class Employee {
     private Double monthlySalary;
     private Double fixedAllowance; // Recurring every month
 
+    // Bank Details
+    private String bankName;
+    private String accountNumber;
+
     public int getEffectiveQuota(int globalDefault) {
         return annualLeaveQuota != null ? annualLeaveQuota : globalDefault;
     }

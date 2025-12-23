@@ -70,6 +70,8 @@ public class EmployeeController {
                 existing.setJoiningDate(employee.getJoiningDate()); // Update Joining Date
                 existing.setMonthlySalary(employee.getMonthlySalary()); // Update Monthly Salary
                 existing.setFixedAllowance(employee.getFixedAllowance()); // Update Fixed Allowance
+                existing.setBankName(employee.getBankName()); // Update Bank Name
+                existing.setAccountNumber(employee.getAccountNumber()); // Update Account Number
 
                 // Update Password only if provided
                 if (employee.getUsername() != null && !employee.getUsername().isEmpty()) {

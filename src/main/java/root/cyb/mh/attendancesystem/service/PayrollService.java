@@ -199,9 +199,27 @@ public class PayrollService {
             }
 
             // Financials
-            double dailyRate = monthlySalary / 30.0; // Standard 30 days
-            if (standardMonthlyWorkingDays > 0) {
-                dailyRate = monthlySalary / standardMonthlyWorkingDays;
+            // Financials - Configurable Daily Rate
+            double dailyRate;
+            String rateBasis = schedule.getDailyRateBasis() != null ? schedule.getDailyRateBasis() : "STANDARD_30";
+
+            switch (rateBasis) {
+                case "ACTUAL_WORKING_DAYS":
+                    // Use calculated working days for the month
+                    dailyRate = (standardMonthlyWorkingDays > 0) ? (monthlySalary / standardMonthlyWorkingDays) : 0;
+                    break;
+                case "FIXED_DAYS":
+                    // Use Configured Fixed Value (e.g., 26)
+                    int fixedDays = (schedule.getDailyRateFixedValue() != null && schedule.getDailyRateFixedValue() > 0)
+                            ? schedule.getDailyRateFixedValue()
+                            : 30;
+                    dailyRate = monthlySalary / fixedDays;
+                    break;
+                case "STANDARD_30":
+                default:
+                    // Default Standard 30 Days
+                    dailyRate = monthlySalary / 30.0;
+                    break;
             }
 
             // Pro-Rata for New Joiners

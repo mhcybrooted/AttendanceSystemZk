@@ -51,13 +51,16 @@ public class SettingsController {
         existing.setLatePenaltyThreshold(schedule.getLatePenaltyThreshold());
         existing.setLatePenaltyDeduction(schedule.getLatePenaltyDeduction());
 
-        // Convert list [6, 7] to string "6,7"
         if (weekendDaysList != null) {
             existing.setWeekendDays(
                     String.join(",", weekendDaysList.stream().map(String::valueOf).toArray(String[]::new)));
         } else {
             existing.setWeekendDays("");
         }
+
+        // Daily Rate Config
+        existing.setDailyRateBasis(schedule.getDailyRateBasis());
+        existing.setDailyRateFixedValue(schedule.getDailyRateFixedValue());
 
         workScheduleRepository.save(existing);
         return "redirect:/settings?success";

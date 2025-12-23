@@ -33,6 +33,11 @@ public class WorkSchedule {
     private Integer latePenaltyThreshold = 3; // e.g. every 3 late days
     private Double latePenaltyDeduction = 0.5; // deduct 0.5 day salary
 
+    // Daily Rate Config
+    // Options: "STANDARD_30", "ACTUAL_WORKING_DAYS", "FIXED_DAYS"
+    private String dailyRateBasis = "STANDARD_30";
+    private Integer dailyRateFixedValue = 30; // Used if FIXED_DAYS is selected
+
     // Default constructor with standard values if needed
     public WorkSchedule() {
         this.startTime = LocalTime.of(9, 0);

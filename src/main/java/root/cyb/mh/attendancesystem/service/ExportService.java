@@ -525,4 +525,42 @@ public class ExportService {
             return out.toByteArray();
         }
     }
+
+    public byte[] exportBankAdviceExcel(List<root.cyb.mh.attendancesystem.model.Payslip> slips) throws IOException {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Bank Advice");
+
+            Row headerRow = sheet.createRow(0);
+            String[] columns = { "Employee ID", "Name", "Bank Name", "Account Number", "Net Salary", "Payment Ref" };
+
+            CellStyle boldStyle = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setBold(true);
+            boldStyle.setFont(font);
+
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+                cell.setCellStyle(boldStyle);
+            }
+
+            int rowIdx = 1;
+            for (root.cyb.mh.attendancesystem.model.Payslip p : slips) {
+                Row row = sheet.createRow(rowIdx++);
+                int col = 0;
+                row.createCell(col++).setCellValue(p.getEmployee().getId());
+                row.createCell(col++).setCellValue(p.getEmployee().getName());
+                row.createCell(col++).setCellValue(p.getEmployee() != null ? p.getEmployee().getBankName() : "");
+                row.createCell(col++).setCellValue(p.getEmployee() != null ? p.getEmployee().getAccountNumber() : "");
+                row.createCell(col++).setCellValue(p.getNetSalary() != null ? p.getNetSalary() : 0.0);
+                row.createCell(col++).setCellValue("Salary " + p.getMonth());
+            }
+
+            for (int i = 0; i < columns.length; i++)
+                sheet.autoSizeColumn(i);
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
 }

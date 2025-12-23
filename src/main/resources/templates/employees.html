@@ -201,6 +201,19 @@
                                         <input type="number" step="0.01" class="form-control" name="fixedAllowance"
                                             id="fixedAllowance" placeholder="e.g. Housing/Transport">
                                     </div>
+                                    <h6 class="mt-3 text-secondary border-bottom pb-1">Bank Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Bank Name</label>
+                                            <input type="text" class="form-control" name="bankName" id="bankName"
+                                                placeholder="Bank Name">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Account Number</label>
+                                            <input type="text" class="form-control" name="accountNumber"
+                                                id="accountNumber" placeholder="Account No.">
+                                        </div>
+                                    </div>
                                     <div class="mb-3">
                                         <label class="form-label">Joining Date</label>
                                         <input type="date" class="form-control" id="empJoiningDate" name="joiningDate">
@@ -257,6 +270,8 @@
                 var quota = btn.getAttribute('data-quota');
                 var salary = btn.getAttribute('data-salary');
                 var allowance = btn.getAttribute('data-allowance');
+                var bankName = btn.getAttribute('data-bank-name');
+                var accNum = btn.getAttribute('data-account-number');
                 var username = btn.getAttribute('data-username'); // If available
                 var isGuest = btn.getAttribute('data-is-guest') === 'true';
                 var joiningDate = btn.getAttribute('data-joining-date');
@@ -270,6 +285,8 @@
                 document.getElementById('empQuota').value = quota;
                 document.getElementById('monthlySalary').value = salary;
                 document.getElementById('fixedAllowance').value = allowance;
+                document.getElementById('bankName').value = bankName;
+                document.getElementById('accountNumber').value = accNum;
                 document.getElementById('empIsGuest').checked = isGuest;
                 document.getElementById('empJoiningDate').value = joiningDate;
                 document.getElementById('empModalTitle').innerText = 'Edit Employee';
@@ -288,6 +305,9 @@
                 document.getElementById('empIsGuest').checked = false;
                 document.getElementById('empQuota').value = '';
                 document.getElementById('monthlySalary').value = '';
+                document.getElementById('fixedAllowance').value = '';
+                document.getElementById('bankName').value = '';
+                document.getElementById('accountNumber').value = '';
                 document.getElementById('empJoiningDate').value = '';
                 document.getElementById('empUsername').value = ''; // Clear username
             });
