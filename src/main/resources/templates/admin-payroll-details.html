@@ -182,7 +182,7 @@
                                             $2000</td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-info me-1"
-                                                th:onclick="showPayslipModal([[${slip.employee.name}]], [[${month}]], [[${slip.basicSalary}]], [[${slip.deductionAmount}]], [[${slip.netSalary}]], [[${slip.totalWorkingDays}]], [[${slip.presentDays}]], [[${slip.absentDays}]], [[${slip.lateDays}]], [[${slip.latePenaltyAmount}]], [[${slip.allowanceAmount}]], [[${slip.bonusAmount}]])">
+                                                th:onclick="showPayslipModal([[${slip.employee.name}]], [[${month}]], [[${slip.basicSalary}]], [[${slip.deductionAmount}]], [[${slip.netSalary}]], [[${slip.totalWorkingDays}]], [[${slip.presentDays}]], [[${slip.absentDays}]], [[${slip.lateDays}]], [[${slip.latePenaltyAmount}]], [[${slip.allowanceAmount}]], [[${slip.bonusAmount}]], [[${slip.advanceSalaryAmount}]])">
                                                 <i class="fas fa-file-invoice"></i>
                                             </button>
 
@@ -236,7 +236,7 @@
                                                     class="fas fa-lock ms-1"></i></span></td>
                                         <td>
                                             <button class="btn btn-sm btn-light border"
-                                                th:onclick="showPayslipModal([[${slip.employee.name}]], [[${month}]], [[${slip.basicSalary}]], [[${slip.deductionAmount}]], [[${slip.netSalary}]], [[${slip.totalWorkingDays}]], [[${slip.presentDays}]], [[${slip.absentDays}]], [[${slip.lateDays}]], [[${slip.latePenaltyAmount}]], [[${slip.allowanceAmount}]], [[${slip.bonusAmount}]])">
+                                                th:onclick="showPayslipModal([[${slip.employee.name}]], [[${month}]], [[${slip.basicSalary}]], [[${slip.deductionAmount}]], [[${slip.netSalary}]], [[${slip.totalWorkingDays}]], [[${slip.presentDays}]], [[${slip.absentDays}]], [[${slip.lateDays}]], [[${slip.latePenaltyAmount}]], [[${slip.allowanceAmount}]], [[${slip.bonusAmount}]], [[${slip.advanceSalaryAmount}]])">
                                                 <i class="fas fa-print"></i>
                                             </button>
                                             <a th:href="@{/payroll/delete/{id}(id=${slip.id})}"
@@ -299,52 +299,66 @@
                                     </div>
                                 </div>
 
-                                <!-- Details Table -->
-                                <div class="table-responsive mb-4">
-                                    <table class="table table-bordered mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th class="w-50">Earnings</th>
-                                                <th class="text-end">Amount</th>
-                                                <th class="w-50">Deductions</th>
-                                                <th class="text-end">Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Basic Salary</td>
-                                                <td class="text-end" id="psBasic">BDT 3000.00</td>
-                                                <td class="text-danger">Total Deductions</td>
-                                                <td class="text-end text-danger" id="psDeductions">-BDT 200.00</td>
-                                            </tr>
-                                            <tr id="allowanceRow" style="display:none;">
-                                                <td>Fixed Allowance</td>
-                                                <td class="text-end" id="psAllowance">BDT 0.00</td>
-                                                <td></td>
-                                                <td></td>
-                                            </tr>
-                                            <tr id="bonusRow" style="display:none;">
-                                                <td>Bonus / OT</td>
-                                                <td class="text-end" id="psBonus">BDT 0.00</td>
-                                                <td></td>
-                                                <td></td>
-                                            </tr>
-                                            <!-- Late Penalty Dynamic Row -->
-                                            <tr id="lateRow" style="display:none;">
-                                                <td></td>
-                                                <td></td>
-                                                <td class="text-warning">Late Penalty <span id="psLateCount"></span>
-                                                </td>
-                                                <td class="text-end text-warning" id="psLateAmt">-BDT 0.00</td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot class="table-light">
-                                            <tr>
-                                                <td colspan="3" class="text-end fw-bold text-uppercase">Net Payable</td>
-                                                <td class="text-end fw-bold fs-5 text-dark" id="psNet">BDT 2800.00</td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                <!-- Details Section (Split View) -->
+                                <div class="row mb-0">
+                                    <!-- Earnings Column -->
+                                    <div class="col-6 border-end pe-0 ps-0">
+                                        <div class="bg-light fw-bold text-uppercase small p-2 border-bottom border-top">
+                                            Earnings</div>
+                                        <table class="table table-borderless table-sm mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="ps-3 py-2">Basic Salary</td>
+                                                    <td class="text-end pe-3 py-2 fw-bold" id="psBasic">BDT 0.00</td>
+                                                </tr>
+                                                <tr id="allowanceRow" style="display:none;">
+                                                    <td class="ps-3 py-2">Fixed Allowance</td>
+                                                    <td class="text-end pe-3 py-2 fw-bold" id="psAllowance">BDT 0.00
+                                                    </td>
+                                                </tr>
+                                                <tr id="bonusRow" style="display:none;">
+                                                    <td class="ps-3 py-2">Bonus / OT</td>
+                                                    <td class="text-end pe-3 py-2 fw-bold" id="psBonus">BDT 0.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Deductions Column -->
+                                    <div class="col-6 ps-0 pe-0">
+                                        <div class="bg-light fw-bold text-uppercase small p-2 border-bottom border-top">
+                                            Deductions</div>
+                                        <table class="table table-borderless table-sm mb-0">
+                                            <tbody>
+                                                <tr id="absentRow">
+                                                    <td class="ps-3 py-2 text-muted">Absent / Unpaid Leave</td>
+                                                    <td class="text-end pe-3 py-2 text-danger" id="psAbsentDed">-</td>
+                                                </tr>
+                                                <tr id="lateRow" style="display:none;">
+                                                    <td class="ps-3 py-2 text-warning">Late Penalty <small
+                                                            id="psLateCount" class="text-muted"></small></td>
+                                                    <td class="text-end pe-3 py-2 text-warning" id="psLateAmt">-</td>
+                                                </tr>
+                                                <tr id="advanceRow" style="display:none;">
+                                                    <td class="ps-3 py-2 text-info">Advance Salary</td>
+                                                    <td class="text-end pe-3 py-2 text-info" id="psAdvanceAmt">-</td>
+                                                </tr>
+                                                <tr class="border-top">
+                                                    <td class="ps-3 py-2 fw-bold">Total Deductions</td>
+                                                    <td class="text-end pe-3 py-2 fw-bold text-danger"
+                                                        id="psDeductions">BDT 0.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Net Pay Row (Full Width) -->
+                                <div class="row m-0 bg-light border-top border-bottom border-dark mt-2">
+                                    <div class="col-8 p-3 fw-bold text-uppercase text-end align-self-center">Net Payable
+                                        Amount</div>
+                                    <div class="col-4 p-3 bg-white text-end fw-bold fs-5 border-start" id="psNet">BDT
+                                        0.00</div>
                                 </div>
 
                                 <!-- Footer -->
@@ -422,7 +436,7 @@
                 }
             }
 
-            function showPayslipModal(name, month, basic, ded, net, working, present, absent, lateDays, lateAmt, allowance, bonus) {
+            function showPayslipModal(name, month, basic, ded, net, working, present, absent, lateDays, lateAmt, allowance, bonus, advance) {
                 document.getElementById('psName').innerText = name;
                 document.getElementById('psMonth').innerText = 'Month: ' + month;
                 // Simple formatting
@@ -451,13 +465,35 @@
                 document.getElementById('psPresent').innerText = present;
                 document.getElementById('psAbsent').innerText = absent;
 
+                // Calculate Specific Deductions
+                let totalDed = parseFloat(ded) || 0;
+                let latePenalty = parseFloat(lateAmt) || 0;
+                let advanceDed = parseFloat(advance) || 0;
+                let absentDed = totalDed - latePenalty - advanceDed;
+
+                // Absent/Other Deduction Row
+                if (absentDed > 0.01) { // Tolerance
+                    document.getElementById('absentRow').style.display = 'table-row';
+                    document.getElementById('psAbsentDed').innerText = '-' + fmt(absentDed);
+                } else {
+                    document.getElementById('absentRow').style.display = 'none';
+                }
+
                 // Late Logic
-                if (lateAmt && parseFloat(lateAmt) > 0) {
+                if (latePenalty > 0) {
                     document.getElementById('lateRow').style.display = 'table-row';
                     document.getElementById('psLateCount').innerText = '(' + lateDays + ' days)';
-                    document.getElementById('psLateAmt').innerText = '-' + fmt(lateAmt);
+                    document.getElementById('psLateAmt').innerText = '-' + fmt(latePenalty);
                 } else {
                     document.getElementById('lateRow').style.display = 'none';
+                }
+
+                // Advance Salary Logic
+                if (advanceDed > 0) {
+                    document.getElementById('advanceRow').style.display = 'table-row';
+                    document.getElementById('psAdvanceAmt').innerText = '-' + fmt(advanceDed);
+                } else {
+                    document.getElementById('advanceRow').style.display = 'none';
                 }
 
                 new bootstrap.Modal(document.getElementById('payslipModal')).show();

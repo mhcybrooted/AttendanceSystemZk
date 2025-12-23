@@ -58,6 +58,9 @@ public class EmployeeDashboardController {
     @Autowired
     private root.cyb.mh.attendancesystem.service.BadgeService badgeService;
 
+    @Autowired
+    private root.cyb.mh.attendancesystem.repository.AdvanceSalaryRepository advanceSalaryRepository;
+
     @GetMapping("/employee/dashboard")
     public String dashboard(Model model, Principal principal) {
         String employeeId = principal.getName();
@@ -139,6 +142,12 @@ public class EmployeeDashboardController {
         } else {
             model.addAttribute("nextHoliday", null);
         }
+
+        // 7. Advance Salary Requests (Sorted Recent First)
+        List<AdvanceSalaryRequest> myRequests = advanceSalaryRepository.findByEmployeeId(employeeId);
+        // Sort descending
+        myRequests.sort((a, b) -> b.getRequestDate().compareTo(a.getRequestDate()));
+        model.addAttribute("advanceRequests", myRequests);
 
         // --- INSPIRATION METRICS (Global) ---
         // Fetch Global Data for Leaderboards

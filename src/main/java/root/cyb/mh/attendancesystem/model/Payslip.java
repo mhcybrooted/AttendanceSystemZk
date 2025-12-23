@@ -46,6 +46,9 @@ public class Payslip {
     private Integer lateDays = 0;
     private Double latePenaltyAmount = 0.0;
 
+    // Advance Salary
+    private Double advanceSalaryAmount = 0.0;
+
     public enum Status {
         DRAFT,
         PAID

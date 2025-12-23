@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import root.cyb.mh.attendancesystem.model.*;
 import root.cyb.mh.attendancesystem.repository.*;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
@@ -33,6 +32,9 @@ public class PayrollService {
 
     @Autowired
     private PayslipRepository payslipRepository;
+
+    @Autowired
+    private AdvanceSalaryRepository advanceSalaryRepository;
 
     public void generatePayrollForMonth(YearMonth yearMonth) {
         // ... (Keep initial setup for configs and dates) ...
@@ -253,7 +255,19 @@ public class PayrollService {
         // Deductions
         double absentDeduction = (absentDays + unpaidLeaveDays) * dailyRate;
         double latePenaltyAmount = penaltyDays * dailyRate;
-        double totalDeductions = absentDeduction + latePenaltyAmount;
+
+        // Advance Salary Logic
+        double advanceDeduction = 0.0;
+        List<AdvanceSalaryRequest> pendingAdvances = advanceSalaryRepository.findPendingDeductions(emp.getId());
+        for (AdvanceSalaryRequest req : pendingAdvances) {
+            advanceDeduction += req.getAmount();
+            // Mark as deducted to prevent double counting
+            req.setDeducted(true);
+            req.setStatus(AdvanceSalaryRequest.Status.PAID); // Mark as Paid back
+            advanceSalaryRepository.save(req);
+        }
+
+        double totalDeductions = absentDeduction + latePenaltyAmount + advanceDeduction;
 
         // Net Pay Formula
         double netSalary = (monthlySalary + fixedAllowance + bonus) - totalDeductions;
@@ -272,6 +286,7 @@ public class PayrollService {
         // Late Penalty (Persist for UI)
         payslip.setLateDays((int) lateCount);
         payslip.setLatePenaltyAmount(latePenaltyAmount);
+        payslip.setAdvanceSalaryAmount(advanceDeduction);
 
         payslipRepository.save(payslip);
     }
